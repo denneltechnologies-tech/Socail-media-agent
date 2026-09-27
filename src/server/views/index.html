@@ -671,7 +671,10 @@
             <h2>Posts & Creative Studio</h2>
             <p>Review autonomous queue, draft AI content, and publish directly</p>
           </div>
-          <button class="btn btn-primary" onclick="openGenerateModal()">✦ Generate AI Post</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="openGenerateModal()">✦ Generate AI Post</button>
+            <button class="btn btn-secondary" onclick="openCalendarModal()" title="Bulk-generate from a weekly content plan">📅 Weekly Calendar</button>
+          </div>
         </div>
         <div class="toolbar">
           <select id="posts-project-filter" onchange="loadPosts()">
@@ -2133,6 +2136,169 @@
         btn.textContent = 'Generate Post';
         btn.disabled = false;
       }
+    }
+
+    // ── Weekly Content Calendar ──
+    function openCalendarModal() {
+      if (projects.length === 0) { toast('Please create a project first', 'error'); return; }
+      const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      const body = `
+        <div style="margin-bottom:12px;padding:12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:8px;font-size:0.82rem;line-height:1.6;color:var(--text-secondary)">
+          <strong style="color:var(--accent)">💡 How it works</strong><br>
+          Write one topic or idea per day. The AI reads your plan and generates a ready-to-review post for each day — all at once. You can be as brief or detailed as you like.<br>
+          <strong>Example:</strong> <em>"Monday: Zanzibar 5-day package, $899. Wednesday: student visa tips for UK. Friday: share a client testimonial."</em>
+        </div>
+        <div class="form-group">
+          <label>Target Project</label>
+          <select id="cal-project" onchange="onCalProjectChange()">
+            ${projects.map(p => `<option value="${p.id}" data-config="${esc(JSON.stringify(p.config||{}))}">  ${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="form-group">
+            <label>Platform</label>
+            <select id="cal-platform">
+              <option value="instagram">Instagram</option>
+              <option value="twitter">Twitter / X</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tone</label>
+            <select id="cal-tone">
+              ${['emotional','informative','urgent','hopeful','friendly'].map(t => `<option value="${t}">${t}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Content Format</label>
+            <select id="cal-contentType">
+              <option value="text">Text Post</option>
+              <option value="image">Image + Text</option>
+              <option value="reel">Reel / Short</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Your Weekly Plan <span style="color:var(--text-muted);font-weight:400">(one topic per day — can be brief notes or full sentences)</span></label>
+          <textarea id="cal-plan" rows="9" placeholder="Monday: Zanzibar beach holiday, 5 days from $899 — emphasise the pristine beaches and all-inclusive experience.&#10;Tuesday: UK student visa tips and how Dennel Travel can assist with applications.&#10;Wednesday: Share a real client testimonial about a trip we organised.&#10;Thursday: New flight deals from Nairobi to Dubai — this week only.&#10;Friday: Weekend getaway ideas for families within East Africa.&#10;Saturday: Behind-the-scenes look at how we plan group travel.&#10;Sunday: Inspirational travel quote + stunning destination photo idea." style="font-size:0.82rem;line-height:1.5"></textarea>
+        </div>
+        <div id="cal-progress" style="display:none;margin-top:10px">
+          <div style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Generating posts…</div>
+          <div id="cal-progress-bar-wrap" style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden;height:8px">
+            <div id="cal-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#a855f7);transition:width 0.4s ease"></div>
+          </div>
+          <div id="cal-progress-log" style="margin-top:8px;font-size:0.78rem;color:var(--text-secondary);max-height:120px;overflow-y:auto;line-height:1.8"></div>
+        </div>`;
+      const footer = `
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="cal-submit" onclick="generateCalendarPosts()">🗓 Generate Week of Posts</button>`;
+      openModal('📅 Weekly Content Calendar', body, footer);
+      onCalProjectChange();
+    }
+
+    function onCalProjectChange() {
+      const sel = document.getElementById('cal-project');
+      if (!sel) return;
+      const opt = sel.options[sel.selectedIndex];
+      try {
+        const cfg = JSON.parse(opt.dataset.config || '{}');
+        if (cfg.defaultTone) document.getElementById('cal-tone').value = cfg.defaultTone;
+        if (cfg.defaultContentType) document.getElementById('cal-contentType').value = cfg.defaultContentType;
+        if (cfg.platforms?.length) document.getElementById('cal-platform').value = cfg.platforms[0];
+      } catch {}
+    }
+
+    async function generateCalendarPosts() {
+      const planRaw = document.getElementById('cal-plan').value.trim();
+      if (!planRaw) { toast('Please write your weekly plan first', 'error'); return; }
+
+      const projectId = document.getElementById('cal-project').value;
+      const platform  = document.getElementById('cal-platform').value;
+      const tone      = document.getElementById('cal-tone').value;
+      const ct        = document.getElementById('cal-contentType').value;
+      const btn       = document.getElementById('cal-submit');
+
+      // Parse lines — each non-empty line = one post topic
+      // Supports: "Monday: topic", "- topic", or just "topic"
+      const lines = planRaw
+        .split(/\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+
+      if (lines.length === 0) { toast('No topics found in your plan', 'error'); return; }
+
+      const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+      // Parse each line into {day, topic}
+      const entries = lines.map((line, i) => {
+        const dayMatch = line.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)[:\s–-]+/i);
+        const day  = dayMatch ? dayMatch[1].charAt(0).toUpperCase() + dayMatch[1].slice(1).toLowerCase() : (dayNames[i] || `Day ${i+1}`);
+        const topic = dayMatch ? line.slice(dayMatch[0].length).trim() : line.replace(/^[-*•]+\s*/, '');
+        return { day, topic };
+      }).filter(e => e.topic.length > 0);
+
+      if (entries.length === 0) { toast('No topics parsed — check your plan format', 'error'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+      const progressSection = document.getElementById('cal-progress');
+      const progressBar     = document.getElementById('cal-progress-bar');
+      const progressLog     = document.getElementById('cal-progress-log');
+      progressSection.style.display = 'block';
+      progressLog.innerHTML = '';
+
+      let done = 0;
+      let failed = 0;
+      const total = entries.length;
+
+      const logLine = (icon, text) => {
+        progressLog.innerHTML += `<div>${icon} ${esc(text)}</div>`;
+        progressLog.scrollTop = progressLog.scrollHeight;
+      };
+
+      for (const { day, topic } of entries) {
+        logLine('⏳', `${day}: ${topic.substring(0, 60)}${topic.length > 60 ? '…' : ''}`);
+        try {
+          const resp = await fetch('/api/posts/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(localStorage.getItem('session_token') ? { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` } : {}),
+            },
+            body: JSON.stringify({
+              projectId,
+              platform,
+              tone,
+              contentType: ct,
+              language: 'en',
+              prompt: `${day} post for Dennel Travel:\n${topic}`,
+            }),
+          });
+          const result = await resp.json();
+          if (!resp.ok) throw new Error(result.error || 'Failed');
+          done++;
+          const pct = Math.round((done + failed) / total * 100);
+          progressBar.style.width = pct + '%';
+          // Replace the ⏳ line with ✅
+          const divs = progressLog.querySelectorAll('div');
+          const last = divs[divs.length - 1];
+          if (last) last.innerHTML = `✅ <strong>${esc(day)}</strong>: Post saved for review`;
+        } catch (err) {
+          failed++;
+          const pct = Math.round((done + failed) / total * 100);
+          progressBar.style.width = pct + '%';
+          const divs = progressLog.querySelectorAll('div');
+          const last = divs[divs.length - 1];
+          if (last) last.innerHTML = `❌ <strong>${esc(day)}</strong>: ${esc(err.message)}`;
+        }
+      }
+
+      loadPosts();
+      btn.innerHTML = `✅ Done! ${done}/${total} posts generated`;
+      btn.disabled = false;
+      toast(`${done} post${done !== 1 ? 's' : ''} generated for the week — go to Posts to review them!`);
     }
 
     // ── DATA STORE & HISTORY ──
