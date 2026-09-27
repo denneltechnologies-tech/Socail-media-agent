@@ -1,20 +1,19 @@
-import { GoogleGenAI } from '@google/genai';
-import { env } from '../config/env.js';
+import { getGenAI } from './client.js';
 import { logger } from '../config/logger.js';
 import { withRetry } from '../core/retry.js';
 import type { ContentRequest, GeneratedContent } from '../types/index.js';
 import { buildGenerationPrompt } from './prompt-builder.js';
-
-const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 export async function generateText(request: ContentRequest): Promise<GeneratedContent> {
   if (!request.prompt?.trim()) {
     throw new Error('Cannot generate content from an empty prompt');
   }
 
+  const { ai, textModel } = getGenAI();
+
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: env.GEMINI_MODEL,
+      model: textModel,
       contents: buildGenerationPrompt(request),
       config: {
         temperature: 0.8,

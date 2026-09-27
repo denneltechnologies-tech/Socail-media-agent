@@ -1,10 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
-import { env } from '../config/env.js';
+import { getGenAI } from './client.js';
 import { logger } from '../config/logger.js';
 import { withRetry } from '../core/retry.js';
 import type { Platform } from '../config/constants.js';
-
-const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 export interface QualityResult {
   score: number;
@@ -12,9 +9,11 @@ export interface QualityResult {
 }
 
 export async function checkQuality(text: string, platform: Platform): Promise<QualityResult> {
+  const { ai, textModel } = getGenAI();
+
   return withRetry(async () => {
     const response = await ai.models.generateContent({
-      model: env.GEMINI_MODEL,
+      model: textModel,
       contents: `You are a social media content quality reviewer.
 Evaluate the following post written for ${platform}. The post may be in any language — judge it in its own language.
 

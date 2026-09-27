@@ -1,5 +1,6 @@
-import { GoogleGenAI } from '@google/genai';
+import { getGenAI } from './client.js';
 import { createClient } from 'pexels';
+import { settingsStore } from '../config/settings-store.js';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { withRetry } from '../core/retry.js';
@@ -7,8 +8,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 import { TEMP_DIR, ensureDir } from '../core/media.js';
-
-const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 function ensureTempDir(): void {
   ensureDir(TEMP_DIR);
@@ -21,6 +20,8 @@ function ensureTempDir(): void {
 export async function generateImage(prompt: string, _width = 1024, _height = 1024): Promise<string> {
   ensureTempDir();
 
+  const { ai, imageModel } = getGenAI();
+
   return withRetry(async () => {
     // Determine aspect ratio from dimensions
     const ratio = _width / _height;
@@ -29,7 +30,7 @@ export async function generateImage(prompt: string, _width = 1024, _height = 102
     else if (ratio < 0.7) aspectRatio = '9:16';
 
     const response = await ai.models.generateImages({
-      model: env.GEMINI_IMAGE_MODEL,
+      model: imageModel,
       prompt,
       config: {
         numberOfImages: 1,
@@ -58,12 +59,13 @@ export async function generateImage(prompt: string, _width = 1024, _height = 102
  * Used as fallback when AI image generation fails.
  */
 export async function searchPexelsImage(query: string, count = 1): Promise<string[]> {
-  if (!env.PEXELS_API_KEY) {
+  const pexelsKey = settingsStore.get('PEXELS_API_KEY', env.PEXELS_API_KEY || '');
+  if (!pexelsKey) {
     logger.warn('Pexels API key not configured');
     return [];
   }
 
-  const client = createClient(env.PEXELS_API_KEY);
+  const client = createClient(pexelsKey);
 
   return withRetry(async () => {
     const result = await client.photos.search({ query, per_page: count });

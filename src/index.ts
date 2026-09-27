@@ -34,10 +34,16 @@ function registerPlugins(): void {
   }
 }
 
+import { settingsStore } from './config/settings-store.js';
+
 async function main(): Promise<void> {
   logger.info('Social Agent AI starting...');
 
   const dbReady = await checkDatabaseConnection();
+
+  if (dbReady) {
+    await settingsStore.init();
+  }
 
   if (env.RUN_MIGRATIONS && dbReady) {
     logger.info('Applying database migrations...');

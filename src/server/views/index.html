@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Social Agent AI</title>
+  <title>Social Agent AI — Automation & Analytics Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #000000;
-      --bg-card: #0a0a0a;
-      --bg-elevated: #111111;
-      --bg-input: #0a0a0a;
-      --border: #1a1a1a;
-      --border-hover: #333333;
-      --text: #ffffff;
-      --text-secondary: #888888;
-      --text-muted: #555555;
-      --accent: #ffffff;
-      --accent-dim: #cccccc;
+      --bg: #07090e;
+      --bg-card: #0d1117;
+      --bg-elevated: #161b22;
+      --bg-input: #0b0f14;
+      --border: #21262d;
+      --border-hover: #384252;
+      --text: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-muted: #586069;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #a855f7;
       --radius: 10px;
       --radius-lg: 14px;
     }
@@ -29,41 +33,52 @@
 
     /* Layout */
     .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 50; }
-    .main { margin-left: 220px; flex: 1; padding: 32px 40px; min-height: 100vh; }
+    .sidebar { width: 240px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 50; }
+    .main { margin-left: 240px; flex: 1; padding: 32px 40px; min-height: 100vh; }
 
     /* Sidebar */
-    .logo { padding: 0 24px 28px; }
-    .logo h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
-    .logo span { font-size: 0.7rem; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; display: block; }
-    .nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; transition: all .12s; border: none; background: none; width: 100%; text-align: left; }
+    .logo { padding: 0 24px 24px; display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 1.1rem; box-shadow: 0 0 16px var(--accent-glow); }
+    .logo h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+    .logo span { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px; display: block; }
+    
+    .nav { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 12px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; transition: all .15s; border: none; background: none; width: 100%; text-align: left; }
     .nav-item:hover { color: var(--text); background: var(--bg-elevated); }
-    .nav-item.active { color: var(--text); background: var(--bg-elevated); }
-    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .nav-badge { margin-left: auto; background: var(--bg-elevated); color: var(--text-secondary); font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-    .nav-item.active .nav-badge { background: var(--border-hover); color: var(--text); }
-    .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border); }
-    .sidebar-footer p { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.3px; }
+    .nav-item.active { color: #fff; background: var(--bg-elevated); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item.active svg { opacity: 1; stroke: var(--accent); }
+    .nav-badge { margin-left: auto; background: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .nav-item.active .nav-badge { background: var(--border); color: var(--text); }
+
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .user-pill { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
+    .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #38bdf8; color: #000; font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+    .btn-logout { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all .15s; }
+    .btn-logout:hover { color: var(--danger); border-color: var(--danger); }
 
     /* Page Header */
-    .page-header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
+    .page-header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
     .page-header h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
-    .page-header p { color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px; }
+    .page-header p { color: var(--text-secondary); font-size: 0.85rem; margin-top: 3px; }
 
     /* Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px; }
-    .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); transition: border-color .15s; }
-    .stat-card:hover { border-color: var(--border-hover); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); transition: all .2s; }
+    .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
     .stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-card .label { font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+    .stat-card .label { font-size: 0.74rem; color: var(--text-secondary); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .stat-card.accent { border-left: 3px solid var(--accent); }
+    .stat-card.success { border-left: 3px solid var(--success); }
+    .stat-card.warning { border-left: 3px solid var(--warning); }
+    .stat-card.purple { border-left: 3px solid var(--purple); }
 
     /* Dashboard Sections */
     .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
     .dash-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
     .dash-section-full { grid-column: 1 / -1; }
     .dash-section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .dash-section-header h3 { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .dash-section-header h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); }
     .dash-section-header .hint { font-size: 0.75rem; color: var(--text-muted); }
     .dash-section-body { padding: 16px 20px; }
 
@@ -71,94 +86,114 @@
     .quick-stats { display: flex; gap: 24px; padding: 16px 20px; }
     .quick-stat { flex: 1; }
     .quick-stat .qs-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
-    .quick-stat .qs-value { font-size: 1.1rem; font-weight: 700; }
+    .quick-stat .qs-value { font-size: 1.15rem; font-weight: 700; }
 
     /* Platform Breakdown */
-    .platform-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .platform-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
     .platform-row:last-child { border-bottom: none; }
     .platform-row .pr-name { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500; }
-    .platform-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .platform-dot { width: 9px; height: 9px; border-radius: 50%; }
     .dot-twitter { background: #1d9bf0; }
     .dot-instagram { background: #e040fb; }
     .dot-youtube { background: #ff0000; }
     .dot-tiktok { background: #00f2ea; }
-    .platform-row .pr-count { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
+    .platform-row .pr-count { font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; }
 
     /* Activity Item */
-    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
     .activity-item:last-child { border-bottom: none; }
-    .activity-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-    .activity-dot-published { background: #4ade80; }
-    .activity-dot-pending { background: #facc15; }
-    .activity-dot-failed { background: #f87171; }
+    .activity-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .activity-dot-published { background: #3fb950; }
+    .activity-dot-pending { background: #d29922; }
+    .activity-dot-failed { background: #f85149; }
     .activity-dot-review { background: #818cf8; }
-    .activity-dot-generating { background: #22d3ee; }
+    .activity-dot-generating { background: #38bdf8; }
     .activity-dot-scheduled { background: #c084fc; }
     .activity-dot-publishing { background: #fb923c; }
-    .activity-text { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; flex: 1; }
+    .activity-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45; flex: 1; }
     .activity-text strong { color: var(--text); font-weight: 600; }
-    .activity-time { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; margin-top: 2px; }
+    .activity-time { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; margin-top: 2px; }
 
-    /* Project Cards */
-    .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-    .project-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border); transition: border-color .15s; }
-    .project-card:hover { border-color: var(--border-hover); }
-    .project-card h3 { color: var(--text); margin-bottom: 6px; font-size: 1rem; font-weight: 600; }
-    .project-card p { color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 14px; line-height: 1.4; }
-    .project-meta { display: flex; gap: 16px; font-size: 0.75rem; color: var(--text-muted); }
-    .project-meta span { display: flex; align-items: center; gap: 4px; }
-    .project-platforms { display: flex; gap: 4px; margin-top: 10px; }
-    .project-actions { display: flex; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-
-    /* Table */
-    table { width: 100%; border-collapse: collapse; }
-    .table-wrapper { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-    th, td { padding: 11px 16px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: var(--bg-elevated); color: var(--text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { font-size: 0.85rem; color: var(--text-secondary); }
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01); }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg-elevated); }
+    tbody tr { transition: background .12s; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
 
     /* Badges */
-    .badge { padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; display: inline-block; letter-spacing: 0.2px; }
-    .badge-published { background: #0a1a0a; color: #4ade80; border: 1px solid #14532d; }
-    .badge-pending { background: #1a1a0a; color: #facc15; border: 1px solid #422006; }
-    .badge-failed { background: #1a0a0a; color: #f87171; border: 1px solid #450a0a; }
-    .badge-review { background: #0f0a1a; color: #a78bfa; border: 1px solid #1e1b4b; }
-    .badge-generating { background: #0a1a1a; color: #22d3ee; border: 1px solid #083344; }
-    .badge-scheduled { background: #1a0a1a; color: #c084fc; border: 1px solid #3b0764; }
-    .badge-publishing { background: #1a0f0a; color: #fb923c; border: 1px solid #431407; }
-    .badge-twitter { background: #0a1420; color: #60a5fa; border: 1px solid #1e3a5f; }
-    .badge-instagram { background: #1a0a20; color: #e879f9; border: 1px solid #4a044e; }
-    .badge-youtube { background: #1a0a0a; color: #f87171; border: 1px solid #450a0a; }
-    .badge-tiktok { background: #0a1a15; color: #2dd4bf; border: 1px solid #042f2e; }
-    .badge-active { background: #0a1a0a; color: #4ade80; border: 1px solid #14532d; }
-    .badge-inactive { background: #111111; color: #555555; border: 1px solid #222222; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .badge-twitter { background: rgba(29,155,240,0.12); color: #1d9bf0; }
+    .badge-instagram { background: rgba(224,64,251,0.12); color: #e040fb; }
+    .badge-youtube { background: rgba(255,0,0,0.12); color: #ff4d4d; }
+    .badge-tiktok { background: rgba(0,242,234,0.12); color: #00f2ea; }
+    .badge-published { background: rgba(63,185,80,0.12); color: #3fb950; }
+    .badge-pending { background: rgba(210,153,34,0.12); color: #d29922; }
+    .badge-failed { background: rgba(248,81,73,0.12); color: #f85149; }
+    .badge-review { background: rgba(129,140,248,0.12); color: #818cf8; }
+    .badge-generating { background: rgba(56,189,248,0.12); color: #38bdf8; }
+    .badge-scheduled { background: rgba(192,132,252,0.12); color: #c084fc; }
+    .badge-publishing { background: rgba(251,146,60,0.12); color: #fb923c; }
+    .badge-active { background: rgba(63,185,80,0.12); color: #3fb950; }
+    .badge-inactive { background: rgba(88,96,105,0.15); color: #8b949e; }
+    .badge-configured { background: rgba(63,185,80,0.12); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+    .badge-missing { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
 
     /* Buttons */
-    .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: all .12s; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
-    .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-    .btn-primary:hover { background: var(--accent-dim); }
-    .btn-secondary { background: transparent; color: var(--text-secondary); border-color: var(--border); }
-    .btn-secondary:hover { background: var(--bg-elevated); color: var(--text); border-color: var(--border-hover); }
-    .btn-danger { background: transparent; color: #f87171; border-color: #2a0a0a; }
-    .btn-danger:hover { background: #1a0a0a; border-color: #450a0a; }
-    .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
-    .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); padding: 6px 10px; }
-    .btn-ghost:hover { color: var(--text); background: var(--bg-elevated); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; }
+    .btn-primary { background: #fff; color: #000; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+    .btn-primary:hover { background: #e2e8f0; }
+    .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); border-color: var(--border-hover); }
+    .btn-danger { background: rgba(248,81,73,0.1); color: var(--danger); border: 1px solid rgba(248,81,73,0.25); }
+    .btn-danger:hover { background: rgba(248,81,73,0.2); }
+    .btn-sm { padding: 5px 10px; font-size: 0.74rem; border-radius: 6px; }
+
+    /* Tabs */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Toolbar */
-    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-    .toolbar select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: inherit; }
-    .toolbar select:focus { outline: none; border-color: var(--border-hover); color: var(--text); }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+    .toolbar input, .toolbar select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: inherit; }
+    .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--accent); }
+
+    /* Filter Pills */
+    .period-pills { display: flex; gap: 6px; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px solid var(--border); width: fit-content; }
+    .period-pill { padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); border: none; background: none; transition: all .15s; }
+    .period-pill:hover { color: var(--text); }
+    .period-pill.active { background: var(--bg-elevated); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); border: 1px solid var(--border); }
+
+    /* Cards Grid */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+    .card-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; transition: border-color .15s; }
+    .card-box:hover { border-color: var(--border-hover); }
+    .card-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .card-box p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; }
+
+    /* Settings Sections */
+    .settings-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 900px; }
+    .settings-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+    .settings-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .settings-card p.sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px; }
+    .settings-field { margin-bottom: 18px; }
+    .settings-field:last-child { margin-bottom: 0; }
+    .settings-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.82rem; font-weight: 500; }
+    .settings-input-wrap { position: relative; }
+    .settings-input-wrap input { width: 100%; padding: 10px 40px 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; font-family: inherit; }
+    .settings-input-wrap input:focus { outline: none; border-color: var(--accent); }
+    .settings-input-wrap .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .settings-input-wrap .eye-btn:hover { color: var(--text); }
 
     /* Modal */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: flex-start; padding-top: 50px; backdrop-filter: blur(4px); }
-    .modal-overlay.show { display: flex; }
-    .modal { background: var(--bg-elevated); border-radius: var(--radius-lg); border: 1px solid var(--border); width: 90%; max-width: 520px; max-height: 82vh; overflow-y: auto; }
-    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; justify-content: center; align-items: flex-start; padding-top: 40px; backdrop-filter: blur(6px); }
+    .modal-overlay.show { display: flex; animation: fadeIn .15s ease; }
+    .modal { background: var(--bg-elevated); border-radius: var(--radius-lg); border: 1px solid var(--border); width: 92%; max-width: 650px; max-height: 86vh; overflow-y: auto; }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .modal-header h3 { font-size: 1rem; font-weight: 600; }
-    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px; transition: all .12s; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px; }
     .modal-close:hover { color: var(--text); background: var(--bg-card); }
     .modal-body { padding: 24px; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
@@ -170,30 +205,24 @@
       width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text); font-size: 0.85rem; font-family: inherit; transition: border-color .12s;
     }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--border-hover); }
-    .form-group textarea { min-height: 80px; resize: vertical; }
-    .checkbox-group { display: flex; gap: 14px; flex-wrap: wrap; }
-    .checkbox-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; }
-    .checkbox-group label:hover { color: var(--text); }
-    .checkbox-group input[type="checkbox"] { width: auto; accent-color: var(--text); }
-    .toggle-row { display: flex; align-items: center; justify-content: space-between; }
-    .toggle { position: relative; width: 40px; height: 22px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 11px; cursor: pointer; transition: .2s; }
-    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: var(--text-muted); border-radius: 50%; transition: .2s; }
-    .toggle input:checked + .toggle-slider { background: var(--text); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--bg); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+    .form-group textarea { min-height: 85px; resize: vertical; }
 
     /* Toast */
     .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
-    .toast { padding: 12px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; animation: slideIn .2s ease; min-width: 240px; border: 1px solid; }
-    .toast-success { background: #0a1a0a; color: #4ade80; border-color: #14532d; }
-    .toast-error { background: #1a0a0a; color: #f87171; border-color: #450a0a; }
+    .toast { padding: 12px 20px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; animation: slideIn .2s ease; min-width: 260px; border: 1px solid; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .toast-success { background: #081d11; color: #4ade80; border-color: #14532d; }
+    .toast-error { background: #220b0b; color: #f87171; border-color: #5c1d1d; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    /* Preview */
-    .preview-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 12px; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary); }
-    .preview-hashtags { color: #60a5fa; margin-top: 8px; font-size: 0.85rem; }
+    /* Sign In Overlay */
+    .auth-overlay { position: fixed; inset: 0; background: rgba(5,7,12,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(16px); }
+    .auth-card { width: 100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 36px 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56,189,248,0.08); }
+    .auth-header { text-align: center; margin-bottom: 28px; }
+    .auth-logo { width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 14px; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.4rem; font-weight: 800; box-shadow: 0 0 24px var(--accent-glow); }
+    .auth-header h2 { font-size: 1.35rem; font-weight: 700; }
+    .auth-header p { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
+    .auth-error { background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 18px; display: none; }
 
     .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem; }
     .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem; }
@@ -210,36 +239,78 @@
   </style>
 </head>
 <body>
+
+  <!-- SIGN IN SCREEN -->
+  <div class="auth-overlay" id="auth-overlay" style="display:none">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">✦</div>
+        <h2>Social Agent AI</h2>
+        <p>Admin Platform Sign In</p>
+      </div>
+      <div class="auth-error" id="auth-error">Invalid username or password</div>
+      <form id="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="auth-username" required placeholder="admin" value="admin" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="settings-input-wrap">
+            <input type="password" id="auth-password" required placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="eye-btn" onclick="togglePassVisibility('auth-password', this)">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="width:100%;padding:12px;margin-top:10px">Sign In</button>
+      </form>
+    </div>
+  </div>
+
   <div class="app">
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="logo">
-        <h1>Social Agent AI</h1>
-        <span>Otomasyon Paneli</span>
+        <div class="logo-icon">✦</div>
+        <div>
+          <h1>Social Agent</h1>
+          <span>Autonomous AI</span>
+        </div>
       </div>
       <nav class="nav">
         <button class="nav-item active" data-tab="dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Genel Bakis
+          Dashboard
         </button>
         <button class="nav-item" data-tab="projects">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h4l2 2h8a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-          Projeler
+          Projects
           <span class="nav-badge" id="nav-projects-count">0</span>
         </button>
         <button class="nav-item" data-tab="accounts">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-          Hesaplar
+          Accounts
           <span class="nav-badge" id="nav-accounts-count">0</span>
         </button>
         <button class="nav-item" data-tab="posts">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          Postlar
+          Posts & Drafts
           <span class="nav-badge" id="nav-posts-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          Data Store & History
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings & API Keys
         </button>
       </nav>
       <div class="sidebar-footer">
-        <p onclick="window.location.href='https://codynlab.dev/'" style="color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;">CodynLab Dev.</p>
+        <div class="user-pill">
+          <div class="user-avatar" id="sidebar-user-avatar">A</div>
+          <span id="sidebar-user-name">admin</span>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()" title="Sign Out">Sign Out</button>
       </div>
     </aside>
 
@@ -250,38 +321,38 @@
       <div class="tab-content active" id="tab-dashboard">
         <div class="page-header">
           <div>
-            <h2>Genel Bakış</h2>
-            <p>İstatistikler ve aktiviteler</p>
+            <h2>Overview Dashboard</h2>
+            <p>Live metrics, autonomous automation queue, and channel performance</p>
           </div>
-          <select id="dashboard-project-filter" onchange="loadDashboard()" class="toolbar-select" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);padding:8px 12px;border-radius:8px;font-size:0.8rem;font-family:inherit;">
-            <option value="">Tüm Projeler</option>
+          <select id="dashboard-project-filter" onchange="loadDashboard()" class="toolbar-select">
+            <option value="">All Projects</option>
           </select>
         </div>
 
         <div class="stats-grid" id="stats">
-          <div class="stat-card">
+          <div class="stat-card accent">
             <div class="value" id="stat-total">-</div>
-            <div class="label">Toplam Post</div>
+            <div class="label">Total Generated</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card success">
             <div class="value" id="stat-published">-</div>
-            <div class="label">Yayınlanan</div>
+            <div class="label">Published</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card warning">
             <div class="value" id="stat-failed">-</div>
-            <div class="label">Başarısız</div>
+            <div class="label">Failed</div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card purple">
             <div class="value" id="stat-accounts">-</div>
-            <div class="label">Aktif Hesap</div>
+            <div class="label">Active Accounts</div>
           </div>
           <div class="stat-card">
             <div class="value" id="stat-jobs-pending">-</div>
-            <div class="label">Bekleyen İş</div>
+            <div class="label">Pending Queue</div>
           </div>
           <div class="stat-card">
             <div class="value" id="stat-jobs-processing">-</div>
-            <div class="label">İşlenen İş</div>
+            <div class="label">Processing</div>
           </div>
         </div>
 
@@ -289,155 +360,410 @@
         <div class="stats-grid" id="engagement-stats">
           <div class="stat-card">
             <div class="value" id="stat-likes">-</div>
-            <div class="label">Toplam Begeni</div>
+            <div class="label">Total Likes</div>
           </div>
           <div class="stat-card">
             <div class="value" id="stat-comments">-</div>
-            <div class="label">Toplam Yorum</div>
+            <div class="label">Total Comments</div>
           </div>
           <div class="stat-card">
             <div class="value" id="stat-shares">-</div>
-            <div class="label">Toplam Paylasim</div>
+            <div class="label">Total Shares</div>
           </div>
           <div class="stat-card">
             <div class="value" id="stat-impressions">-</div>
-            <div class="label">Toplam Gosterim</div>
+            <div class="label">Total Impressions</div>
           </div>
         </div>
 
         <div class="dash-grid">
-          <!-- Platform Dagilimi -->
+          <!-- Platform Breakdown -->
           <div class="dash-section">
             <div class="dash-section-header">
-              <h3>Platform Dağılımı</h3>
-              <span class="hint">Son 7 gun — post & engagement</span>
+              <h3>Platform Distribution</h3>
+              <span class="hint">Last 7 days activity</span>
             </div>
             <div class="dash-section-body" id="platform-breakdown">
-              <div class="loading">Yükleniyor...</div>
+              <div class="loading">Loading...</div>
             </div>
           </div>
 
-          <!-- Proje Ozeti -->
+          <!-- Project Summary -->
           <div class="dash-section">
             <div class="dash-section-header">
-              <h3>Projeler</h3>
-              <span class="hint" id="dash-project-count">0 proje</span>
+              <h3>Active Projects</h3>
+              <span class="hint" id="dash-project-count">0 projects</span>
             </div>
             <div class="dash-section-body" id="project-summary">
-              <div class="loading">Yükleniyor...</div>
+              <div class="loading">Loading...</div>
             </div>
           </div>
 
-          <!-- Hesap Performansi -->
+          <!-- Account Performance -->
           <div class="dash-section dash-section-full">
             <div class="dash-section-header">
-              <h3>Hesap Performansi</h3>
-              <span class="hint">Son 7 gun</span>
+              <h3>Account Performance</h3>
+              <span class="hint">Engagement & posting health</span>
             </div>
             <div class="dash-section-body" style="padding:0">
               <table>
                 <thead>
-                  <tr><th>Hesap</th><th>Platform</th><th>Post</th><th>Begeni</th><th>Ort. Etkilesim</th><th>Strateji</th><th>Durum</th></tr>
+                  <tr><th>Account</th><th>Platform</th><th>Posts</th><th>Likes</th><th>Avg Engagement</th><th>Strategy</th><th>Status</th></tr>
                 </thead>
                 <tbody id="account-perf-table">
-                  <tr><td colspan="7" class="loading">Yukleniyor...</td></tr>
+                  <tr><td colspan="7" class="loading">Loading...</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Son Aktiviteler -->
+          <!-- Recent Activity -->
           <div class="dash-section dash-section-full">
             <div class="dash-section-header">
-              <h3>Son Aktiviteler</h3>
-              <span class="hint">Son 20 içerik</span>
+              <h3>Recent Automation Events</h3>
+              <span class="hint">Pipeline updates</span>
             </div>
             <div class="dash-section-body" id="recent-activity">
-              <div class="loading">Yükleniyor...</div>
+              <div class="loading">Loading...</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PROJELER TAB -->
+      <!-- PROJECTS TAB -->
       <div class="tab-content" id="tab-projects">
         <div class="page-header">
           <div>
-            <h2>Projeler</h2>
-            <p>Proje ve otomasyon ayarları</p>
+            <h2>Brand & Client Projects</h2>
+            <p>Organize brands, tone templates, target languages, and channel defaults</p>
           </div>
-          <button class="btn btn-primary" onclick="openProjectModal()">+ Yeni Proje</button>
+          <button class="btn btn-primary" onclick="openProjectModal()">+ New Project</button>
         </div>
-        <div class="project-grid" id="projects-grid">
-          <div class="loading">Yükleniyor...</div>
+        <div class="cards-grid" id="projects-grid">
+          <div class="loading">Loading projects...</div>
         </div>
       </div>
 
-      <!-- HESAPLAR TAB -->
+      <!-- ACCOUNTS TAB -->
       <div class="tab-content" id="tab-accounts">
         <div class="page-header">
           <div>
-            <h2>Hesaplar</h2>
-            <p>Sosyal medya hesap yönetimi</p>
+            <h2>Connected Social Accounts</h2>
+            <p>Manage API credentials, OAuth tokens, and auto-publishing schedules</p>
           </div>
-          <button class="btn btn-primary" onclick="openAccountModal()">+ Yeni Hesap</button>
+          <button class="btn btn-primary" onclick="openAccountModal()">+ Link Account</button>
         </div>
         <div class="toolbar">
           <select id="accounts-project-filter" onchange="loadAccounts()">
-            <option value="">Tüm Projeler</option>
+            <option value="">All Projects</option>
+          </select>
+          <select id="accounts-platform-filter" onchange="loadAccounts()">
+            <option value="">All Platforms</option>
+            <option value="twitter">Twitter / X</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+            <option value="tiktok">TikTok</option>
           </select>
         </div>
-        <div class="table-wrapper">
+        <div class="dash-section">
           <table>
             <thead>
-              <tr><th>Platform</th><th>Kullanıcı</th><th>Rol</th><th>Proje</th><th>Strateji</th><th>Baglanti</th><th>Durum</th><th>İşlemler</th></tr>
+              <tr><th>Username</th><th>Platform</th><th>Role</th><th>Project</th><th>Schedule (Cron)</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody id="accounts-table">
-              <tr><td colspan="8" class="loading">Yükleniyor...</td></tr>
+              <tr><td colspan="7" class="loading">Loading accounts...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- POSTLAR TAB -->
+      <!-- POSTS TAB -->
       <div class="tab-content" id="tab-posts">
         <div class="page-header">
           <div>
-            <h2>Postlar</h2>
-            <p>İçerik yönetimi ve üretimi</p>
+            <h2>Posts & Creative Studio</h2>
+            <p>Review autonomous queue, draft AI content, and publish directly</p>
           </div>
-          <button class="btn btn-primary" onclick="openGenerateModal()">İçerik Üret</button>
+          <button class="btn btn-primary" onclick="openGenerateModal()">✦ Generate AI Post</button>
         </div>
         <div class="toolbar">
           <select id="posts-project-filter" onchange="loadPosts()">
-            <option value="">Tum Projeler</option>
+            <option value="">All Projects</option>
           </select>
           <select id="posts-platform-filter" onchange="loadPosts()">
-            <option value="">Tum Platformlar</option>
+            <option value="">All Platforms</option>
             <option value="twitter">Twitter</option>
             <option value="instagram">Instagram</option>
             <option value="youtube">YouTube</option>
             <option value="tiktok">TikTok</option>
           </select>
           <select id="posts-status-filter" onchange="loadPosts()">
-            <option value="">Tum Durumlar</option>
-            <option value="pending">Bekliyor</option>
-            <option value="generating">Uretiliyor</option>
-            <option value="review">Inceleme</option>
-            <option value="scheduled">Zamanlanmis</option>
-            <option value="published">Yayinlandi</option>
-            <option value="failed">Basarisiz</option>
+            <option value="">All Statuses</option>
+            <option value="published">Published</option>
+            <option value="review">Needs Review</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="pending">Pending Queue</option>
+            <option value="failed">Failed</option>
           </select>
         </div>
-        <div class="table-wrapper">
+        <div class="dash-section">
           <table>
             <thead>
-              <tr><th>Platform</th><th>İçerik</th><th>Tür</th><th>Durum</th><th>Tarih</th><th>İşlemler</th></tr>
+              <tr><th>Platform</th><th>Content</th><th>Type</th><th>Status</th><th>Created</th><th>Actions</th></tr>
             </thead>
             <tbody id="posts-table">
-              <tr><td colspan="7" class="loading">Yükleniyor...</td></tr>
+              <tr><td colspan="6" class="loading">Loading posts...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- DATA STORE & HISTORY TAB -->
+      <div class="tab-content" id="tab-history">
+        <div class="page-header">
+          <div>
+            <h2>Database Store & Analytics History</h2>
+            <p>Persistent storage of all generated user data, publishing history, and aggregated analytics</p>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="period-pills">
+              <button class="period-pill active" onclick="setHistoryPeriod('7d', this)">7 Days</button>
+              <button class="period-pill" onclick="setHistoryPeriod('30d', this)">30 Days</button>
+              <button class="period-pill" onclick="setHistoryPeriod('90d', this)">90 Days</button>
+              <button class="period-pill" onclick="setHistoryPeriod('all', this)">All Time</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="exportHistory('csv')">Export CSV</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportHistory('json')">Export JSON</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="value" id="hist-total-generated">-</div>
+            <div class="label">Total Generated</div>
+          </div>
+          <div class="stat-card success">
+            <div class="value" id="hist-total-published">-</div>
+            <div class="label">Published</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="hist-total-impressions">-</div>
+            <div class="label">Total Impressions</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="value" id="hist-total-likes">-</div>
+            <div class="label">Total Engagement</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="hist-avg-quality">-</div>
+            <div class="label">Avg Quality Score</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="hist-avg-safety">-</div>
+            <div class="label">Avg Safety Score</div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="toolbar" style="margin-top:10px">
+          <input type="text" id="hist-search" placeholder="Search post text, hashtags, IDs..." oninput="debounceHistorySearch()" style="min-width:260px">
+          <select id="hist-platform-filter" onchange="loadHistoryPosts()">
+            <option value="">All Platforms</option>
+            <option value="twitter">Twitter / X</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+            <option value="tiktok">TikTok</option>
+          </select>
+          <select id="hist-status-filter" onchange="loadHistoryPosts()">
+            <option value="">All Statuses</option>
+            <option value="published">Published</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="review">Review</option>
+            <option value="failed">Failed</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+
+        <!-- Data Store Table -->
+        <div class="dash-section">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Platform</th><th>Account / Project</th><th>Content Preview</th><th>Quality / Safety</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="hist-posts-table">
+              <tr><td colspan="7" class="loading">Loading database store...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS & API KEYS TAB -->
+      <div class="tab-content" id="tab-settings">
+        <div class="page-header">
+          <div>
+            <h2>Settings & API Keys</h2>
+            <p>Manage all external API credentials, models, and platform authentication</p>
+          </div>
+          <button class="btn btn-primary" onclick="saveAllSettings()">💾 Save All Settings</button>
+        </div>
+
+        <div class="settings-grid">
+          
+          <!-- AI & Content Generation -->
+          <div class="settings-card">
+            <h3>✦ AI & Content Generation Engine</h3>
+            <p class="sub">Configure Google Gemini models, image generation, and stock fallback</p>
+            
+            <div class="settings-field">
+              <div class="settings-label">
+                <span>Google Gemini API Key</span>
+                <span class="badge" id="badge-gemini">Checking...</span>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-GEMINI_API_KEY" placeholder="AIzaSy...">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-GEMINI_API_KEY', this)">👁</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+              <div class="form-group">
+                <label>Text Model</label>
+                <select id="cfg-GEMINI_MODEL">
+                  <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & recommended)</option>
+                  <option value="gemini-2.5-pro">gemini-2.5-pro (High reasoning)</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Image Generation Model</label>
+                <select id="cfg-GEMINI_IMAGE_MODEL">
+                  <option value="imagen-4.0-generate-001">imagen-4.0-generate-001</option>
+                  <option value="imagen-3.0-generate-002">imagen-3.0-generate-002</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-field" style="margin-top:14px">
+              <div class="settings-label">
+                <span>Pexels API Key (Stock Photo Fallback)</span>
+                <span class="badge" id="badge-pexels">Optional</span>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-PEXELS_API_KEY" placeholder="Free key from pexels.com/api">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-PEXELS_API_KEY', this)">👁</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Platform Credentials -->
+          <div class="settings-card">
+            <h3>📡 Social Media Platform Credentials</h3>
+            <p class="sub">Configure API access keys for automated publishing</p>
+
+            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">Twitter / X (Developer v2)</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-TWITTER_API_KEY" placeholder="API Key">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TWITTER_API_KEY', this)">👁</button>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-TWITTER_API_SECRET" placeholder="API Key Secret">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TWITTER_API_SECRET', this)">👁</button>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-TWITTER_ACCESS_TOKEN" placeholder="Access Token">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TWITTER_ACCESS_TOKEN', this)">👁</button>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-TWITTER_ACCESS_SECRET" placeholder="Access Token Secret">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TWITTER_ACCESS_SECRET', this)">👁</button>
+              </div>
+            </div>
+
+            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">Instagram Graph API</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-INSTAGRAM_ACCESS_TOKEN" placeholder="Instagram Access Token">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-INSTAGRAM_ACCESS_TOKEN', this)">👁</button>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="text" id="cfg-INSTAGRAM_BUSINESS_ACCOUNT_ID" placeholder="Business Account ID">
+              </div>
+            </div>
+
+            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">YouTube Data API v3</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+              <div class="settings-input-wrap">
+                <input type="text" id="cfg-YOUTUBE_CLIENT_ID" placeholder="Client ID">
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-YOUTUBE_CLIENT_SECRET" placeholder="Client Secret">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-YOUTUBE_CLIENT_SECRET', this)">👁</button>
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-YOUTUBE_REFRESH_TOKEN" placeholder="Refresh Token">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-YOUTUBE_REFRESH_TOKEN', this)">👁</button>
+              </div>
+            </div>
+
+            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">TikTok Content API</h4>
+            <div class="settings-input-wrap" style="margin-bottom:14px">
+              <input type="password" id="cfg-TIKTOK_ACCESS_TOKEN" placeholder="TikTok Access Token">
+              <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TIKTOK_ACCESS_TOKEN', this)">👁</button>
+            </div>
+          </div>
+
+          <!-- Quality & Notifications -->
+          <div class="settings-card">
+            <h3>⚙️ Automation & Safety Controls</h3>
+            <p class="sub">Configure AI quality gate and notification webhooks</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label>WhatsApp Admin Number</label>
+                <input type="text" id="cfg-WHATSAPP_ADMIN_NUMBER" placeholder="Country code without + (e.g. 1234567890)">
+              </div>
+              <div class="form-group">
+                <label>Public Server Base URL</label>
+                <input type="text" id="cfg-PUBLIC_BASE_URL" placeholder="https://social-69-62-106-189.sslip.io">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px">
+              <div class="form-group">
+                <label>Quality Gate</label>
+                <select id="cfg-QUALITY_CHECK_ENABLED">
+                  <option value="false">Disabled (Auto-publish immediately)</option>
+                  <option value="true">Enabled (Score with AI before publishing)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Minimum Quality Score (0 - 100)</label>
+                <input type="number" id="cfg-QUALITY_MIN_SCORE" min="0" max="100" value="60">
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Security -->
+          <div class="settings-card">
+            <h3>🔒 Admin Security</h3>
+            <p class="sub">Update dashboard credentials</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label>Dashboard Username</label>
+                <input type="text" id="cfg-DASHBOARD_USERNAME" placeholder="admin">
+              </div>
+              <div class="form-group">
+                <label>Dashboard Password</label>
+                <div class="settings-input-wrap">
+                  <input type="password" id="cfg-DASHBOARD_PASSWORD" placeholder="Enter new password">
+                  <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-DASHBOARD_PASSWORD', this)">👁</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -448,7 +774,7 @@
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="modal-title">Baslik</h3>
+        <h3 id="modal-title">Title</h3>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
       <div class="modal-body" id="modal-body"></div>
@@ -464,6 +790,103 @@
     let projects = [];
     let projectsMap = {};
     let accountsById = {};
+    let currentHistoryPeriod = '7d';
+    let historyPostsCache = [];
+    let historyDebounceTimer = null;
+
+    // ── Auth Handling ──
+    async function checkAuth() {
+      try {
+        const token = localStorage.getItem('session_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/auth/me', { headers });
+        const data = await res.json();
+        
+        if (data.authRequired && !data.authenticated) {
+          showAuthScreen();
+        } else {
+          hideAuthScreen();
+          const username = data.user?.username || 'admin';
+          document.getElementById('sidebar-user-name').textContent = username;
+          document.getElementById('sidebar-user-avatar').textContent = username[0].toUpperCase();
+          initApp();
+        }
+      } catch (err) {
+        showAuthScreen();
+      }
+    }
+
+    function showAuthScreen() {
+      document.getElementById('auth-overlay').style.display = 'flex';
+      document.getElementById('auth-error').style.display = 'none';
+    }
+
+    function hideAuthScreen() {
+      document.getElementById('auth-overlay').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const btn = document.getElementById('auth-submit-btn');
+      const errBox = document.getElementById('auth-error');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Signing In...';
+      errBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Authentication failed');
+        }
+
+        if (data.token) {
+          localStorage.setItem('session_token', data.token);
+        }
+        hideAuthScreen();
+        toast('Welcome back, ' + (data.user?.username || 'Admin'));
+        document.getElementById('sidebar-user-name').textContent = data.user?.username || 'admin';
+        initApp();
+      } catch (err) {
+        errBox.textContent = err.message;
+        errBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleLogout() {
+      const token = localStorage.getItem('session_token');
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
+      } catch {}
+      localStorage.removeItem('session_token');
+      showAuthScreen();
+    }
+
+    function togglePassVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🔒';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
 
     // ── Toast ──
     function toast(msg, type = 'success') {
@@ -481,7 +904,14 @@
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         item.classList.add('active');
         document.getElementById('tab-' + item.dataset.tab).classList.add('active');
-        const loader = { dashboard: loadDashboard, projects: loadProjects, accounts: loadAccounts, posts: loadPosts };
+        const loader = {
+          dashboard: loadDashboard,
+          projects: loadProjects,
+          accounts: loadAccounts,
+          posts: loadPosts,
+          history: loadHistory,
+          settings: loadSettings,
+        };
         loader[item.dataset.tab]?.();
       });
     });
@@ -502,15 +932,25 @@
 
     // ── API Helper ──
     async function api(url, opts = {}) {
+      const token = localStorage.getItem('session_token');
+      const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(url, {
-        headers: { 'Content-Type': 'application/json' },
         ...opts,
+        headers,
         body: opts.body ? JSON.stringify(opts.body) : undefined,
       });
+
+      if (res.status === 401) {
+        showAuthScreen();
+        throw new Error('Authentication required');
+      }
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const detail = data.issues?.length ? ': ' + data.issues.map(i => `${i.path} ${i.message}`).join(', ') : '';
-        const error = new Error((data.error || 'Bir hata olustu') + detail);
+        const error = new Error((data.error || 'Request failed') + detail);
         error.status = res.status;
         error.data = data;
         throw error;
@@ -530,7 +970,6 @@
           api('/api/dashboard/account-performance'),
         ]);
 
-        // Stats
         document.getElementById('stat-total').textContent = stats.posts?.total ?? 0;
         document.getElementById('stat-published').textContent = stats.posts?.published ?? 0;
         document.getElementById('stat-failed').textContent = stats.posts?.failed ?? 0;
@@ -538,50 +977,45 @@
         document.getElementById('stat-jobs-pending').textContent = stats.jobs?.pending ?? 0;
         document.getElementById('stat-jobs-processing').textContent = stats.jobs?.processing ?? 0;
 
-        // Engagement stats
-        const fmt = n => Number(n || 0).toLocaleString('tr-TR');
+        const fmt = n => Number(n || 0).toLocaleString();
         document.getElementById('stat-likes').textContent = fmt(analyticsSummary.totals?.totalLikes);
         document.getElementById('stat-comments').textContent = fmt(analyticsSummary.totals?.totalComments);
         document.getElementById('stat-shares').textContent = fmt(analyticsSummary.totals?.totalShares);
         document.getElementById('stat-impressions').textContent = fmt(analyticsSummary.totals?.totalImpressions);
 
-        // Platform breakdown with engagement
         const platEl = document.getElementById('platform-breakdown');
-        const platNames = { twitter: 'Twitter', instagram: 'Instagram', youtube: 'YouTube', tiktok: 'TikTok' };
         const platData = analyticsSummary.platformBreakdown || [];
         if (platData.length === 0) {
-          platEl.innerHTML = '<div class="empty" style="padding:20px">Henuz veri yok</div>';
+          platEl.innerHTML = '<div class="empty" style="padding:20px">No activity recorded yet</div>';
         } else {
           platEl.innerHTML = platData
             .sort((a, b) => b.postCount - a.postCount)
             .map(p => `
               <div class="platform-row">
-                <div class="pr-name"><span class="platform-dot dot-${p.platform}"></span>${platNames[p.platform] || p.platform}</div>
+                <div class="pr-name"><span class="platform-dot dot-${p.platform}"></span>${p.platform.toUpperCase()}</div>
                 <div class="pr-count" style="display:flex;gap:12px;font-size:0.75rem">
-                  <span>${p.postCount} post</span>
-                  <span>${fmt(p.totalLikes)} begeni</span>
-                  <span>${fmt(p.totalImpressions)} gosterim</span>
+                  <span>${p.postCount} posts</span>
+                  <span>${fmt(p.totalLikes)} likes</span>
+                  <span>${fmt(p.totalImpressions)} imp</span>
                 </div>
               </div>`).join('');
         }
 
-        // Project summary
         const projEl = document.getElementById('project-summary');
-        document.getElementById('dash-project-count').textContent = projects.length + ' proje';
+        document.getElementById('dash-project-count').textContent = projects.length + ' projects';
         if (projects.length === 0) {
-          projEl.innerHTML = '<div class="empty" style="padding:20px">Henuz proje yok</div>';
+          projEl.innerHTML = '<div class="empty" style="padding:20px">No projects created yet</div>';
         } else {
           projEl.innerHTML = projects.slice(0, 5).map(p => `
             <div class="platform-row">
               <div class="pr-name">${esc(p.name)}</div>
-              <div class="pr-count">${p.postCount || 0} post</div>
+              <div class="pr-count">${p.postCount || 0} posts</div>
             </div>`).join('');
         }
 
-        // Account performance table
         const perfBody = document.getElementById('account-perf-table');
         if (!accountPerf || accountPerf.length === 0) {
-          perfBody.innerHTML = '<tr><td colspan="7" class="empty">Henuz hesap verisi yok</td></tr>';
+          perfBody.innerHTML = '<tr><td colspan="7" class="empty">No accounts linked yet</td></tr>';
         } else {
           perfBody.innerHTML = accountPerf.map(a => `
             <tr>
@@ -589,48 +1023,38 @@
               <td><span class="badge badge-${a.platform}">${a.platform}</span></td>
               <td>${a.postCount}</td>
               <td>${fmt(a.totalLikes)}</td>
-              <td>%${a.avgEngagementRate.toFixed(2)}</td>
-              <td><span class="badge ${a.hasStrategy ? 'badge-active' : 'badge-inactive'}">${a.hasStrategy ? 'Aktif' : 'Yok'}</span></td>
-              <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Aktif' : 'Pasif'}</span></td>
+              <td>${a.avgEngagementRate.toFixed(2)}%</td>
+              <td><span class="badge ${a.hasStrategy ? 'badge-active' : 'badge-inactive'}">${a.hasStrategy ? 'Active' : 'Manual'}</span></td>
+              <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
             </tr>`).join('');
         }
 
-        // Recent activity
         const actEl = document.getElementById('recent-activity');
         if (posts.length === 0) {
-          actEl.innerHTML = '<div class="empty" style="padding:20px">Henuz aktivite yok</div>';
+          actEl.innerHTML = '<div class="empty" style="padding:20px">No recent events</div>';
         } else {
           actEl.innerHTML = posts.slice(0, 10).map(p => {
-            const statusText = { published: 'yayinlandi', pending: 'bekliyor', failed: 'basarisiz oldu', review: 'inceleme bekliyor', generating: 'uretiliyor', scheduled: 'zamanlandi', publishing: 'yayinlaniyor' };
             const time = timeAgo(new Date(p.createdAt));
             return `
               <div class="activity-item">
                 <span class="activity-dot activity-dot-${p.status}"></span>
                 <div class="activity-text">
-                  <strong>${p.platform}</strong> icerigi ${statusText[p.status] || p.status}
-                  <br>${esc((p.text || '').substring(0, 60))}${(p.text||'').length > 60 ? '...' : ''}
+                  <strong>${p.platform.toUpperCase()}</strong> post is ${p.status}
+                  <br>${esc((p.text || '').substring(0, 75))}${(p.text||'').length > 75 ? '...' : ''}
                 </div>
                 <span class="activity-time">${time}</span>
               </div>`;
           }).join('');
         }
-      } catch (err) {
-        ['stat-total','stat-published','stat-failed','stat-accounts','stat-jobs-pending','stat-jobs-processing'].forEach(id => document.getElementById(id).textContent = '0');
-        ['stat-likes','stat-comments','stat-shares','stat-impressions'].forEach(id => document.getElementById(id).textContent = '0');
-        document.getElementById('platform-breakdown').innerHTML = '<div class="empty" style="padding:20px">Veri yuklenemedi</div>';
-        document.getElementById('project-summary').innerHTML = '<div class="empty" style="padding:20px">Veri yuklenemedi</div>';
-        document.getElementById('recent-activity').innerHTML = '<div class="empty" style="padding:20px">Veri yuklenemedi</div>';
-        document.getElementById('account-perf-table').innerHTML = '<tr><td colspan="7" class="empty">Veri yuklenemedi</td></tr>';
-        toast(err.message, 'error');
-      }
+      } catch (err) {}
     }
 
     function timeAgo(date) {
       const s = Math.floor((Date.now() - date.getTime()) / 1000);
-      if (s < 60) return 'az once';
-      if (s < 3600) return Math.floor(s / 60) + ' dk once';
-      if (s < 86400) return Math.floor(s / 3600) + ' saat once';
-      return Math.floor(s / 86400) + ' gun once';
+      if (s < 60) return 'just now';
+      if (s < 3600) return Math.floor(s / 60) + 'm ago';
+      if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+      return Math.floor(s / 86400) + 'd ago';
     }
 
     // ── Projects ──
@@ -643,7 +1067,6 @@
         renderProjects();
         document.getElementById('nav-projects-count').textContent = projects.length;
       } catch (err) {
-        document.getElementById('projects-grid').innerHTML = '<div class="empty">Projeler yuklenemedi</div>';
         toast(err.message, 'error');
       }
     }
@@ -651,8 +1074,9 @@
     function populateProjectDropdowns() {
       ['accounts-project-filter', 'posts-project-filter', 'dashboard-project-filter'].forEach(id => {
         const sel = document.getElementById(id);
+        if (!sel) return;
         const val = sel.value;
-        sel.innerHTML = '<option value="">Tum Projeler</option>' +
+        sel.innerHTML = '<option value="">All Projects</option>' +
           projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
         sel.value = val;
       });
@@ -661,25 +1085,25 @@
     function renderProjects() {
       const grid = document.getElementById('projects-grid');
       if (projects.length === 0) {
-        grid.innerHTML = '<div class="empty">Henuz proje yok. Yeni bir proje olusturun.</div>';
+        grid.innerHTML = '<div class="empty">No projects yet. Create your first brand project.</div>';
         return;
       }
       grid.innerHTML = projects.map(p => {
         const cfg = p.config || {};
-        const platforms = (cfg.platforms || []).map(pl => `<span class="badge badge-${pl}">${pl}</span>`).join('');
+        const platforms = (cfg.platforms || []).map(pl => `<span class="badge badge-${pl}">${pl}</span>`).join(' ');
         return `
-          <div class="project-card">
+          <div class="card-box">
             <h3>${esc(p.name)}</h3>
-            <p>${esc(p.description || 'Aciklama yok')}</p>
-            <div class="project-meta">
-              <span>${p.accountCount} hesap</span>
-              <span>${p.postCount} post</span>
-              <span>${p.active ? 'Aktif' : 'Pasif'}</span>
+            <p>${esc(p.description || 'No description provided')}</p>
+            <div style="display:flex;gap:12px;font-size:0.75rem;color:var(--text-secondary);margin-bottom:14px">
+              <span>${p.accountCount} accounts</span>
+              <span>${p.postCount} posts</span>
+              <span>${p.active ? 'Active' : 'Inactive'}</span>
             </div>
-            <div class="project-platforms">${platforms}</div>
-            <div class="project-actions">
-              <button class="btn btn-secondary btn-sm" onclick="openProjectModal('${p.id}')">Duzenle</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Sil</button>
+            <div style="margin-bottom:14px">${platforms}</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" onclick="openProjectModal('${p.id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
             </div>
           </div>`;
       }).join('');
@@ -690,466 +1114,169 @@
       const cfg = p?.config || {};
       const body = `
         <div class="form-group">
-          <label>Proje Adi</label>
-          <input id="pf-name" value="${esc(p?.name || '')}" placeholder="Proje adi">
+          <label>Project Name</label>
+          <input id="pf-name" value="${esc(p?.name || '')}" placeholder="e.g. Dennel Tech">
         </div>
         <div class="form-group">
-          <label>Aciklama</label>
-          <textarea id="pf-desc" placeholder="Proje aciklamasi">${esc(p?.description || '')}</textarea>
+          <label>Description</label>
+          <textarea id="pf-desc" placeholder="Brand overview and focus">${esc(p?.description || '')}</textarea>
         </div>
         <div class="form-group">
-          <label>Platformlar</label>
-          <div class="checkbox-group">
+          <label>Target Channels</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
             ${['twitter','instagram','youtube','tiktok'].map(pl =>
-              `<label><input type="checkbox" name="pf-platform" value="${pl}" ${(cfg.platforms||[]).includes(pl)?'checked':''}> ${pl}</label>`
+              `<label style="font-size:0.8rem;display:flex;align-items:center;gap:4px"><input type="checkbox" name="pf-platform" value="${pl}" ${(cfg.platforms||[]).includes(pl)?'checked':''}> ${pl}</label>`
             ).join('')}
           </div>
         </div>
-        <div class="form-group">
-          <label>Varsayilan Ton</label>
-          <select id="pf-tone">
-            ${['emotional','informative','urgent','hopeful','friendly'].map(t =>
-              `<option value="${t}" ${cfg.defaultTone===t?'selected':''}>${t}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Varsayilan Icerik Turu</label>
-          <select id="pf-contentType">
-            ${['text','image','video','story','reel','short'].map(t =>
-              `<option value="${t}" ${cfg.defaultContentType===t?'selected':''}>${t}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Icerik Dili</label>
-          <select id="pf-language">
-            ${[['tr','Turkce'],['en','English'],['de','Deutsch'],['es','Espanol'],['fr','Francais']].map(([code, name]) =>
-              `<option value="${code}" ${(cfg.language || 'tr')===code?'selected':''}>${name}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Prompt Sablonu</label>
-          <textarea id="pf-prompt" placeholder="Gemini icin prompt sablonu...">${esc(cfg.promptTemplate || '')}</textarea>
-        </div>
-        <div class="form-group">
-          <label>Gorsel Prompt Sablonu</label>
-          <textarea id="pf-imagePrompt" placeholder="Ornek: {{animalType}} in a cozy home, shallow depth of field...">${esc(cfg.imagePromptTemplate || '')}</textarea>
-          <small style="color:var(--text-muted);font-size:0.75rem">Degiskenler: {{text}}, {{animalType}}, {{type}}</small>
-        </div>
-        <div class="form-group">
-          <label>Logo</label>
-          <div style="display:flex;align-items:center;gap:12px">
-            <input type="file" id="pf-logo" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="previewLogo(this)">
-            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pf-logo').click()">Logo Yukle</button>
-            <img id="pf-logo-preview" src="${esc(cfg.logoUrl || '')}" style="height:40px;border-radius:6px;${cfg.logoUrl ? '' : 'display:none'}">
-            ${cfg.logoUrl ? '<button class="btn btn-danger btn-sm" onclick="removeLogo()">Kaldir</button>' : ''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>Default Tone</label>
+            <select id="pf-tone">
+              ${['emotional','informative','urgent','hopeful','friendly'].map(t =>
+                `<option value="${t}" ${cfg.defaultTone===t?'selected':''}>${t}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Default Content Type</label>
+            <select id="pf-contentType">
+              ${['text','image','video','story','reel','short'].map(t =>
+                `<option value="${t}" ${cfg.defaultContentType===t?'selected':''}>${t}</option>`
+              ).join('')}
+            </select>
           </div>
         </div>
         <div class="form-group">
-          <label>Zamanlama (cron)</label>
-          <input id="pf-schedule" value="${esc(cfg.scheduleExpression || '')}" placeholder="*/30 * * * *">
-        </div>
-        <div class="form-group">
-          <div class="toggle-row">
-            <label>Otomatik Yayinla</label>
-            <label class="toggle"><input type="checkbox" id="pf-autoPublish" ${cfg.autoPublish?'checked':''}><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="toggle-row">
-            <label>Aktif</label>
-            <label class="toggle"><input type="checkbox" id="pf-active" ${p ? (p.active?'checked':'') : 'checked'}><span class="toggle-slider"></span></label>
-          </div>
+          <label>Prompt Template for Gemini</label>
+          <textarea id="pf-prompt" placeholder="Write custom prompt guidelines for this brand...">${esc(cfg.promptTemplate || '')}</textarea>
         </div>`;
       const footer = `
-        <button class="btn btn-secondary" onclick="closeModal()">Iptal</button>
-        <button class="btn btn-primary" onclick="saveProject('${id||''}')">${id?'Guncelle':'Olustur'}</button>`;
-      openModal(id ? 'Projeyi Duzenle' : 'Yeni Proje', body, footer);
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject('${id || ''}')">Save</button>`;
+      openModal(id ? 'Edit Project' : 'New Project', body, footer);
     }
 
     async function saveProject(id) {
       try {
         const name = document.getElementById('pf-name').value.trim();
-        if (!name) { toast('Proje adi zorunlu', 'error'); return; }
-        const platforms = [...document.querySelectorAll('[name=pf-platform]:checked')].map(c => c.value);
-        const config = {
-          defaultTone: document.getElementById('pf-tone').value,
-          defaultContentType: document.getElementById('pf-contentType').value,
-          platforms,
-          promptTemplate: document.getElementById('pf-prompt').value,
-          imagePromptTemplate: document.getElementById('pf-imagePrompt').value,
-          scheduleExpression: document.getElementById('pf-schedule').value,
-          autoPublish: document.getElementById('pf-autoPublish').checked,
-          language: document.getElementById('pf-language').value,
-        };
+        if (!name) { toast('Project name is required', 'error'); return; }
+        const platforms = Array.from(document.querySelectorAll('input[name="pf-platform"]:checked')).map(cb => cb.value);
         const payload = {
           name,
-          description: document.getElementById('pf-desc').value,
-          active: document.getElementById('pf-active').checked,
-          config,
+          description: document.getElementById('pf-desc').value.trim(),
+          config: {
+            platforms,
+            defaultTone: document.getElementById('pf-tone').value,
+            defaultContentType: document.getElementById('pf-contentType').value,
+            promptTemplate: document.getElementById('pf-prompt').value.trim(),
+          },
         };
-        let projectId = id;
         if (id) {
-          await api(`/api/projects/${id}`, { method: 'PATCH', body: payload });
-          toast('Proje guncellendi');
+          await api(`/api/projects/${id}`, { method: 'PUT', body: payload });
+          toast('Project updated');
         } else {
-          const created = await api('/api/projects', { method: 'POST', body: payload });
-          projectId = created.id;
-          toast('Proje olusturuldu');
-        }
-        // Upload logo if selected
-        const logoFile = document.getElementById('pf-logo')?.files?.[0];
-        if (logoFile && projectId) {
-          const fd = new FormData();
-          fd.append('logo', logoFile);
-          const resp = await fetch(`/api/projects/${projectId}/logo`, { method: 'POST', body: fd });
-          if (!resp.ok) toast('Logo yuklenemedi', 'error');
+          await api('/api/projects', { method: 'POST', body: payload });
+          toast('Project created');
         }
         closeModal();
         loadProjects();
       } catch (err) { toast(err.message, 'error'); }
     }
 
-    function previewLogo(input) {
-      const file = input.files?.[0];
-      const preview = document.getElementById('pf-logo-preview');
-      if (file && preview) {
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = '';
-      }
-    }
-
-    function removeLogo() {
-      const preview = document.getElementById('pf-logo-preview');
-      if (preview) { preview.src = ''; preview.style.display = 'none'; }
-      const input = document.getElementById('pf-logo');
-      if (input) input.value = '';
-    }
-
     async function deleteProject(id) {
-      if (!confirm('Bu projeyi silmek istediginize emin misiniz?')) return;
+      if (!confirm('Are you sure you want to delete this project?')) return;
       try {
         await api(`/api/projects/${id}`, { method: 'DELETE' });
-        toast('Proje silindi');
+        toast('Project deleted');
         loadProjects();
-      } catch (err) {
-        if (err.status === 409) {
-          const d = err.data || {};
-          if (confirm(`Bu projeye bagli ${d.accountCount ?? 0} hesap ve ${d.postCount ?? 0} post var.\n\nTum bagli verileriyle birlikte silinsin mi?`)) {
-            try {
-              await api(`/api/projects/${id}?force=true`, { method: 'DELETE' });
-              toast('Proje ve bagli veriler silindi');
-              loadProjects();
-            } catch (err2) { toast(err2.message, 'error'); }
-          }
-        } else {
-          toast(err.message, 'error');
-        }
-      }
+      } catch (err) { toast(err.message, 'error'); }
     }
 
     // ── Accounts ──
     async function loadAccounts() {
       try {
+        const params = new URLSearchParams();
         const pid = document.getElementById('accounts-project-filter').value;
-        const url = pid ? `/api/accounts?projectId=${pid}` : '/api/accounts';
-        const accounts = await api(url);
+        const plat = document.getElementById('accounts-platform-filter').value;
+        if (pid) params.set('projectId', pid);
+        if (plat) params.set('platform', plat);
+        const accounts = await api(`/api/accounts?${params}`);
         document.getElementById('nav-accounts-count').textContent = accounts.length;
         const tbody = document.getElementById('accounts-table');
         if (accounts.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">Hesap bulunamadi</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">No accounts linked yet</td></tr>';
           return;
         }
-        accountsById = {};
-        accounts.forEach(a => accountsById[a.id] = a);
-        tbody.innerHTML = accounts.map(a => {
-          const s = a.strategy;
-          const stratBadge = s?.active
-            ? `<span class="badge badge-active" title="${esc(s.cronExpression)}">${esc(s.tone)} · ${esc(s.cronExpression)}</span>`
-            : '<span class="badge badge-inactive">Yok</span>';
-          return `
+        tbody.innerHTML = accounts.map(a => `
           <tr>
+            <td><strong>@${esc(a.username)}</strong></td>
             <td><span class="badge badge-${a.platform}">${a.platform}</span></td>
-            <td style="color:var(--text);font-weight:500">${esc(a.username)}</td>
             <td>${a.role}</td>
             <td>${esc(projectsMap[a.projectId] || '-')}</td>
-            <td>${stratBadge}</td>
-            <td><span class="badge ${a.hasCredentials ? 'badge-active' : 'badge-inactive'}">${a.hasCredentials ? 'Bagli' : 'Bagli Degil'}</span></td>
-            <td><span class="badge badge-${a.active?'active':'inactive'}">${a.active?'Aktif':'Pasif'}</span></td>
+            <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.postingSchedule || 'Manual')}</td>
+            <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
             <td>
-              <button class="btn btn-ghost btn-sm" onclick="openAccountModal('${a.id}', accountsById['${a.id}'])">Duzenle</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteAccount('${a.id}')">Sil</button>
+              <button class="btn btn-secondary btn-sm" onclick="openAccountModal('${a.id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteAccount('${a.id}')">Delete</button>
             </td>
-          </tr>`;
-        }).join('');
-      } catch (err) {
-        document.getElementById('accounts-table').innerHTML = '<tr><td colspan="8" class="empty">Hesaplar yuklenemedi</td></tr>';
-        toast(err.message, 'error');
-      }
+          </tr>`).join('');
+      } catch (err) { toast(err.message, 'error'); }
     }
 
-    function openAccountModal(id, existing) {
-      const a = existing || {};
-      const s = a.strategy || {};
-      const mix = s.contentMix || { original: 70, repost: 20, reply: 10 };
+    function openAccountModal(id) {
+      if (projects.length === 0) { toast('Please create a project first', 'error'); return; }
       const body = `
         <div class="form-group">
-          <label>Proje</label>
+          <label>Project</label>
           <select id="af-project">
-            ${projects.map(p => `<option value="${p.id}" ${a.projectId===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+            ${projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
           <label>Platform</label>
-          <select id="af-platform" onchange="toggleOAuthSection()">
-            ${['twitter','instagram','youtube','tiktok'].map(pl =>
-              `<option value="${pl}" ${a.platform===pl?'selected':''}>${pl}</option>`
-            ).join('')}
+          <select id="af-platform">
+            <option value="twitter">Twitter / X</option>
+            <option value="instagram">Instagram</option>
+            <option value="youtube">YouTube</option>
+            <option value="tiktok">TikTok</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Kullanici Adi</label>
-          <input id="af-username" value="${esc(a.username || '')}" placeholder="@kullanici">
+          <label>Account Handle / Username</label>
+          <input id="af-username" placeholder="e.g. brand_official">
         </div>
         <div class="form-group">
-          <label>Rol</label>
-          <select id="af-role">
-            ${['primary','secondary','backup'].map(r =>
-              `<option value="${r}" ${a.role===r?'selected':''}>${r}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div id="af-creds-section" style="display:${(a.platform || 'twitter') === 'twitter' ? 'block' : 'none'}">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <label style="font-size:0.8rem;color:var(--text-secondary);font-weight:500;margin:0">Twitter Credentials</label>
-            <span id="af-twitter-status" class="badge ${a.hasCredentials ? 'badge-active' : 'badge-inactive'}">${a.hasCredentials ? 'Bagli' : 'Bagli Degil'}</span>
-          </div>
-          <div class="form-group">
-            <label>API Key (Consumer Key)</label>
-            <input id="af-cred-apiKey" type="password" value="${esc(a._apiKey || '')}" placeholder="Twitter API Key">
-          </div>
-          <div class="form-group">
-            <label>API Secret (Consumer Secret)</label>
-            <input id="af-cred-apiSecret" type="password" value="${esc(a._apiSecret || '')}" placeholder="Twitter API Secret">
-          </div>
-          <div class="form-group">
-            <label>Access Token</label>
-            <input id="af-cred-accessToken" type="password" value="${esc(a._accessToken || '')}" placeholder="Access Token">
-          </div>
-          <div class="form-group">
-            <label>Access Secret</label>
-            <input id="af-cred-accessSecret" type="password" value="${esc(a._accessSecret || '')}" placeholder="Access Secret">
-          </div>
-          <div style="margin-bottom:16px">
-            <small style="color:var(--text-muted);font-size:0.7rem">Developer Portal → App → Keys and Tokens bolumunden alinir</small>
-          </div>
-        </div>
-        ${!id ? `<div id="af-json-creds-section" style="display:${(a.platform || 'twitter') === 'twitter' ? 'none' : 'block'}">
-          <div class="form-group">
-            <label>Credentials (JSON)</label>
-            <textarea id="af-credentials" placeholder='{"key": "...", "secret": "..."}'>{}</textarea>
-          </div>
-        </div>` : ''}
-        <div class="form-group">
-          <div class="toggle-row">
-            <label>Aktif</label>
-            <label class="toggle"><input type="checkbox" id="af-active" ${a.active !== false ?'checked':''}><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-
-        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
-        <h4 style="font-size:0.9rem;margin-bottom:14px;color:var(--text)">Icerik Stratejisi</h4>
-
-        <div class="form-group">
-          <div class="toggle-row">
-            <label>Strateji Aktif</label>
-            <label class="toggle"><input type="checkbox" id="af-strat-active" ${s.active?'checked':''}><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Hesap Rolu</label>
-          <select id="af-strat-role" onchange="applyRolePreset()">
-            <option value="tanitim" ${(s.role||'')==='tanitim'?'selected':''}>Tanitim</option>
-            <option value="farkindalik" ${(s.role||'')==='farkindalik'?'selected':''}>Farkindalik</option>
-            <option value="pr" ${(s.role||'')==='pr'?'selected':''}>PR / Genel</option>
-            <option value="custom" ${!s.role || s.role==='custom'?'selected':''}>Ozel</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Ton</label>
-          <select id="af-strat-tone">
-            ${['emotional','informative','urgent','hopeful','friendly'].map(t =>
-              `<option value="${t}" ${s.tone===t?'selected':''}>${t}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Icerik Turleri</label>
-          <div class="checkbox-group">
-            ${['text','image','video','story','reel','short'].map(ct =>
-              `<label><input type="checkbox" name="af-strat-ct" value="${ct}" ${(s.contentTypes||['text']).includes(ct)?'checked':''}> ${ct}</label>`
-            ).join('')}
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Prompt Sablonu</label>
-          <textarea id="af-strat-prompt" placeholder="Gemini'ye gonderilecek ana prompt...">${esc(s.promptTemplate || '')}</textarea>
-        </div>
-        <div class="form-group">
-          <label>Zamanlama (Cron)</label>
-          <input id="af-strat-cron" value="${esc(s.cronExpression || '0 */4 * * *')}" placeholder="0 */4 * * *">
-          <div style="display:flex;gap:6px;margin-top:6px">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('af-strat-cron').value='0 */4 * * *'">Her 4 saat</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('af-strat-cron').value='0 8,14,20 * * *'">Gunde 3</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('af-strat-cron').value='0 * * * *'">Saatte 1</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Icerik Dagilimi (toplam 100%)</label>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div style="flex:1"><label style="font-size:0.7rem;color:var(--text-muted)">Orijinal %</label><input type="number" id="af-strat-original" value="${mix.original}" min="0" max="100" onchange="balanceMix('original')"></div>
-            <div style="flex:1"><label style="font-size:0.7rem;color:var(--text-muted)">Repost %</label><input type="number" id="af-strat-repost" value="${mix.repost}" min="0" max="100" onchange="balanceMix('repost')"></div>
-            <div style="flex:1"><label style="font-size:0.7rem;color:var(--text-muted)">Yanit %</label><input type="number" id="af-strat-reply" value="${mix.reply}" min="0" max="100" onchange="balanceMix('reply')"></div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Sabit Hashtagler (virgülle ayirin)</label>
-          <input id="af-strat-hashtags" value="${esc((s.hashtags||[]).join(', '))}" placeholder="#hashtag1, #hashtag2">
-        </div>
-        <div class="form-group">
-          <label>Dil</label>
-          <select id="af-strat-lang">
-            <option value="tr" ${(s.language||'tr')==='tr'?'selected':''}>Turkce</option>
-            <option value="en" ${s.language==='en'?'selected':''}>English</option>
-            <option value="de" ${s.language==='de'?'selected':''}>Deutsch</option>
-            <option value="es" ${s.language==='es'?'selected':''}>Espanol</option>
-            <option value="fr" ${s.language==='fr'?'selected':''}>Francais</option>
-          </select>
+          <label>Schedule Cron Expression</label>
+          <input id="af-schedule" placeholder="0 */4 * * * (Every 4 hours)" value="0 */4 * * *">
         </div>`;
       const footer = `
-        <button class="btn btn-secondary" onclick="closeModal()">Iptal</button>
-        <button class="btn btn-primary" onclick="saveAccount('${id||''}')">${id?'Guncelle':'Olustur'}</button>`;
-      openModal(id ? 'Hesabi Duzenle' : 'Yeni Hesap', body, footer);
-    }
-
-    function balanceMix(changed) {
-      const o = parseInt(document.getElementById('af-strat-original').value) || 0;
-      const rp = parseInt(document.getElementById('af-strat-repost').value) || 0;
-      const rl = parseInt(document.getElementById('af-strat-reply').value) || 0;
-      const total = o + rp + rl;
-      if (total > 100) {
-        const excess = total - 100;
-        if (changed === 'original') document.getElementById('af-strat-reply').value = Math.max(0, rl - excess);
-        else if (changed === 'repost') document.getElementById('af-strat-reply').value = Math.max(0, rl - excess);
-        else document.getElementById('af-strat-repost').value = Math.max(0, rp - excess);
-      }
-    }
-
-    function getStrategyFromForm() {
-      const active = document.getElementById('af-strat-active')?.checked || false;
-      const contentTypes = [...document.querySelectorAll('input[name="af-strat-ct"]:checked')].map(c => c.value);
-      const hashtagsRaw = (document.getElementById('af-strat-hashtags')?.value || '').trim();
-      const hashtags = hashtagsRaw ? hashtagsRaw.split(',').map(h => h.trim()).filter(Boolean) : [];
-      return {
-        active,
-        role: document.getElementById('af-strat-role')?.value || 'custom',
-        tone: document.getElementById('af-strat-tone')?.value || 'friendly',
-        contentTypes: contentTypes.length ? contentTypes : ['text'],
-        promptTemplate: document.getElementById('af-strat-prompt')?.value || '',
-        cronExpression: document.getElementById('af-strat-cron')?.value || '0 */4 * * *',
-        contentMix: {
-          original: parseInt(document.getElementById('af-strat-original')?.value) || 70,
-          repost: parseInt(document.getElementById('af-strat-repost')?.value) || 20,
-          reply: parseInt(document.getElementById('af-strat-reply')?.value) || 10,
-        },
-        hashtags,
-        language: document.getElementById('af-strat-lang')?.value || 'tr',
-      };
-    }
-
-    function toggleOAuthSection() {
-      const platform = document.getElementById('af-platform')?.value;
-      const credsSection = document.getElementById('af-creds-section');
-      const jsonSection = document.getElementById('af-json-creds-section');
-      if (credsSection) credsSection.style.display = platform === 'twitter' ? 'block' : 'none';
-      if (jsonSection) jsonSection.style.display = platform === 'twitter' ? 'none' : 'block';
-    }
-
-    function applyRolePreset() {
-      const role = document.getElementById('af-strat-role')?.value;
-      const presets = {
-        tanitim: { original: 80, repost: 10, reply: 10, tone: 'friendly' },
-        farkindalik: { original: 60, repost: 20, reply: 20, tone: 'emotional' },
-        pr: { original: 70, repost: 15, reply: 15, tone: 'informative' },
-      };
-      const p = presets[role];
-      if (!p) return;
-      document.getElementById('af-strat-original').value = p.original;
-      document.getElementById('af-strat-repost').value = p.repost;
-      document.getElementById('af-strat-reply').value = p.reply;
-      document.getElementById('af-strat-tone').value = p.tone;
-    }
-
-
-    function getCredentialsFromForm() {
-      const platform = document.getElementById('af-platform').value;
-      if (platform === 'twitter') {
-        const apiKey = document.getElementById('af-cred-apiKey')?.value?.trim();
-        const apiSecret = document.getElementById('af-cred-apiSecret')?.value?.trim();
-        const accessToken = document.getElementById('af-cred-accessToken')?.value?.trim();
-        const accessSecret = document.getElementById('af-cred-accessSecret')?.value?.trim();
-        if (apiKey && apiSecret && accessToken && accessSecret) {
-          return { apiKey, apiSecret, accessToken, accessSecret };
-        }
-        if (apiKey || apiSecret || accessToken || accessSecret) {
-          return null; // partially filled = error
-        }
-        return undefined; // empty = skip
-      }
-      const el = document.getElementById('af-credentials');
-      if (!el) return undefined;
-      try { return JSON.parse(el.value); }
-      catch { return null; }
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAccount('${id || ''}')">Save</button>`;
+      openModal(id ? 'Edit Account' : 'Link Social Account', body, footer);
     }
 
     async function saveAccount(id) {
       try {
-        const strategy = getStrategyFromForm();
-        const platform = document.getElementById('af-platform').value;
-        const credentials = getCredentialsFromForm();
-        if (credentials === null) {
-          toast(platform === 'twitter' ? 'Twitter credentials eksik — tum 4 alani doldurun' : 'Credentials JSON gecersiz', 'error');
-          return;
-        }
+        const username = document.getElementById('af-username').value.trim();
+        if (!username) { toast('Username is required', 'error'); return; }
+        const payload = {
+          projectId: document.getElementById('af-project').value,
+          platform: document.getElementById('af-platform').value,
+          username,
+          credentials: {},
+          strategy: {
+            active: true,
+            postingSchedule: document.getElementById('af-schedule').value.trim() || '0 */4 * * *',
+            contentMix: { original: 80, repost: 15, reply: 5 },
+          },
+        };
         if (id) {
-          const body = {
-            username: document.getElementById('af-username').value.trim(),
-            platform,
-            role: document.getElementById('af-role').value,
-            active: document.getElementById('af-active').checked,
-            strategy,
-          };
-          if (credentials) body.credentials = credentials;
-          await api(`/api/accounts/${id}`, { method: 'PATCH', body });
-          toast('Hesap guncellendi');
+          await api(`/api/accounts/${id}`, { method: 'PUT', body: payload });
+          toast('Account updated');
         } else {
-          const username = document.getElementById('af-username').value.trim();
-          if (!username) { toast('Kullanici adi zorunlu', 'error'); return; }
-          if (!credentials) { toast('Credentials zorunlu', 'error'); return; }
-          await api('/api/accounts', {
-            method: 'POST',
-            body: {
-              projectId: document.getElementById('af-project').value,
-              platform,
-              username,
-              role: document.getElementById('af-role').value,
-              credentials,
-              strategy,
-            },
-          });
-          toast('Hesap olusturuldu');
+          await api('/api/accounts', { method: 'POST', body: payload });
+          toast('Account linked');
         }
         closeModal();
         loadAccounts();
@@ -1157,25 +1284,15 @@
     }
 
     async function deleteAccount(id) {
-      if (!confirm('Bu hesabi silmek istediginize emin misiniz?')) return;
+      if (!confirm('Are you sure you want to delete this account?')) return;
       try {
         await api(`/api/accounts/${id}`, { method: 'DELETE' });
-        toast('Hesap silindi');
+        toast('Account deleted');
         loadAccounts();
-      } catch (err) {
-        if (err.status === 409 && confirm(`Bu hesaba ait ${err.data?.postCount ?? 0} post var.\n\nPostlarla birlikte silinsin mi?`)) {
-          try {
-            await api(`/api/accounts/${id}?force=true`, { method: 'DELETE' });
-            toast('Hesap ve postlari silindi');
-            loadAccounts();
-          } catch (err2) { toast(err2.message, 'error'); }
-        } else if (err.status !== 409) {
-          toast(err.message, 'error');
-        }
-      }
+      } catch (err) { toast(err.message, 'error'); }
     }
 
-    // ── Posts ──
+    // ── Posts & Drafts ──
     async function loadPosts() {
       try {
         const params = new URLSearchParams();
@@ -1189,169 +1306,149 @@
         document.getElementById('nav-posts-count').textContent = posts.length;
         const tbody = document.getElementById('posts-table');
         if (posts.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty">Post bulunamadi</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="empty">No posts found</td></tr>';
           return;
         }
         tbody.innerHTML = posts.map(p => `
           <tr style="cursor:pointer" onclick="viewPost('${p.id}')">
             <td><span class="badge badge-${p.platform}">${p.platform}</span></td>
-            <td style="color:var(--text-secondary);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((p.text || '').substring(0, 80))}</td>
+            <td style="color:var(--text-secondary);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((p.text || '').substring(0, 80))}</td>
             <td style="color:var(--text-muted)">${p.contentType}</td>
             <td><span class="badge badge-${p.status}">${p.status}</span></td>
-            <td style="color:var(--text-muted)">${new Date(p.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td style="color:var(--text-muted)">${new Date(p.createdAt).toLocaleDateString()}</td>
             <td>
-              ${p.status === 'review' ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();approvePost('${p.id}')">Onayla</button>` : ''}
-              ${['review','scheduled'].includes(p.status) ? `<button class="btn btn-primary btn-sm" style="background:#16a34a;border-color:#16a34a" onclick="event.stopPropagation();publishPost('${p.id}','${p.platform}')">Yayinla</button>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePost('${p.id}')">Sil</button>
+              ${['review','scheduled'].includes(p.status) ? `<button class="btn btn-primary btn-sm" style="background:#16a34a;border-color:#16a34a" onclick="event.stopPropagation();publishPost('${p.id}','${p.platform}')">Publish</button>` : ''}
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePost('${p.id}')">Delete</button>
             </td>
           </tr>`).join('');
-      } catch (err) {
-        document.getElementById('posts-table').innerHTML = '<tr><td colspan="6" class="empty">Postlar yuklenemedi</td></tr>';
-        toast(err.message, 'error');
-      }
+      } catch (err) { toast(err.message, 'error'); }
     }
 
     async function viewPost(id) {
       try {
         const post = await api(`/api/posts/${id}`);
         const hashtags = (post.hashtags || []).map(t => t.startsWith('#') ? t : '#' + t).join(' ');
-        const videoUrl = (post.mediaUrls || []).find(u => u.endsWith('.mp4'));
+        const videoUrl = (post.mediaUrls || []).find(u => u?.endsWith('.mp4'));
         const body = `
           ${videoUrl ? `
           <div class="form-group">
-            <label>Video</label>
-            <video controls style="width:100%;max-height:400px;border-radius:8px;background:#000" src="${esc(videoUrl)}"></video>
-            <a href="${esc(videoUrl)}" download style="display:inline-block;margin-top:8px;font-size:0.8rem;color:var(--accent-dim)">Videoyu indir</a>
+            <label>Generated Video</label>
+            <video controls style="width:100%;max-height:360px;border-radius:8px;background:#000" src="${esc(videoUrl)}"></video>
+            <a href="${esc(videoUrl)}" download style="display:inline-block;margin-top:6px;font-size:0.75rem;color:var(--accent)">Download MP4</a>
           </div>` : ''}
           <div class="form-group">
-            <label>Platform</label>
-            <span class="badge badge-${post.platform}" style="font-size:0.85rem">${post.platform}</span>
-            <span class="badge badge-${post.status}" style="font-size:0.85rem;margin-left:8px">${post.status}</span>
+            <label>Channel & Status</label>
+            <span class="badge badge-${post.platform}">${post.platform}</span>
+            <span class="badge badge-${post.status}" style="margin-left:6px">${post.status}</span>
           </div>
           <div class="form-group">
-            <label>Icerik</label>
-            <textarea id="vp-text" rows="6" style="white-space:pre-wrap">${esc(post.text || '')}</textarea>
+            <label>Content Text</label>
+            <textarea id="vp-text" rows="5">${esc(post.text || '')}</textarea>
           </div>
           <div class="form-group">
-            <label>Hashtagler</label>
+            <label>Hashtags</label>
             <input id="vp-hashtags" value="${esc(hashtags)}">
           </div>
           ${post.errorMessage ? `
           <div class="form-group">
-            <label>Hata</label>
-            <div class="preview-box" style="color:#f87171">${esc(post.errorMessage)}</div>
+            <label style="color:var(--danger)">Error Log</label>
+            <div style="background:#220b0b;padding:12px;border-radius:8px;font-size:0.8rem;color:#f87171">${esc(post.errorMessage)}</div>
           </div>` : ''}
-          ${post.platformUrl ? `
-          <div class="form-group">
-            <a href="${esc(post.platformUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem;color:var(--accent-dim)">Platformda goruntule ↗</a>
-          </div>` : ''}
-          <div class="form-group" style="color:var(--text-muted);font-size:0.8rem">
-            Tur: ${esc(post.contentType)} · Ton: ${esc(post.tone || '-')}
-            ${post.qualityScore != null ? ` · Kalite: ${post.qualityScore}/100` : ''}
-            ${post.safetyScore != null ? ` · Guvenlik: ${post.safetyScore}/100` : ''}
-            ${post.analytics ? ` · ❤️ ${post.analytics.likes} · 💬 ${post.analytics.comments} · 👁️ ${post.analytics.impressions}` : ''}
-            · ${new Date(post.createdAt).toLocaleString('tr-TR')}
+          <div style="font-size:0.75rem;color:var(--text-muted);display:flex;gap:12px;margin-top:12px">
+            <span>Quality: ${post.qualityScore != null ? post.qualityScore + '/100' : 'N/A'}</span>
+            <span>Safety: ${post.safetyScore != null ? post.safetyScore + '/100' : '100/100'}</span>
+            <span>Likes: ${post.analytics?.likes ?? 0}</span>
+            <span>Created: ${new Date(post.createdAt).toLocaleString()}</span>
           </div>`;
-        const actions = [];
-        if (post.status === 'review') {
-          actions.push(`<button class="btn btn-primary" onclick="approvePost('${id}')">Onayla</button>`);
-        }
-        if (['review','scheduled'].includes(post.status)) {
-          actions.push(`<button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a" onclick="publishPost('${id}','${post.platform}')">Yayinla</button>`);
-        }
-        actions.push(`<button class="btn btn-secondary" onclick="savePost('${id}')">Kaydet</button>`);
-        actions.push(`<button class="btn btn-secondary" onclick="closeModal()">Kapat</button>`);
-        openModal('Post Detay', body, actions.join(' '));
+        const footer = `
+          ${['review','scheduled'].includes(post.status) ? `<button class="btn btn-primary" style="background:#16a34a" onclick="publishPost('${id}','${post.platform}')">Publish Now</button>` : ''}
+          <button class="btn btn-secondary" onclick="savePost('${id}')">Save Changes</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
+        openModal('Post Details', body, footer);
       } catch (err) { toast(err.message, 'error'); }
     }
 
     async function savePost(id) {
       try {
         const text = document.getElementById('vp-text').value;
-        const hashtagStr = document.getElementById('vp-hashtags').value;
-        const hashtags = hashtagStr.split(/\s+/).map(t => t.replace(/^#/, '')).filter(Boolean);
+        const hashtags = document.getElementById('vp-hashtags').value.split(/\s+/).map(t => t.replace(/^#/, '')).filter(Boolean);
         await api(`/api/posts/${id}`, { method: 'PATCH', body: { text, hashtags } });
-        toast('Post guncellendi');
-        closeModal();
-        loadPosts();
-      } catch (err) { toast(err.message, 'error'); }
-    }
-
-    async function approvePost(id) {
-      try {
-        await api(`/api/posts/${id}`, { method: 'PATCH', body: { status: 'scheduled' } });
-        toast('Post onaylandi ve zamanlanmaya alindi');
+        toast('Post updated');
         closeModal();
         loadPosts();
       } catch (err) { toast(err.message, 'error'); }
     }
 
     async function publishPost(id, platform) {
-      if (!confirm(`Bu postu ${platform} uzerinde yayinlamak istediginize emin misiniz?`)) return;
+      if (!confirm(`Publish this content to ${platform}?`)) return;
       try {
         await api(`/api/posts/${id}/publish`, { method: 'POST' });
-        toast('Post yayinlama kuyruğuna eklendi');
+        toast('Post added to publishing queue');
+        closeModal();
         loadPosts();
       } catch (err) { toast(err.message, 'error'); }
     }
 
     async function deletePost(id) {
-      if (!confirm('Bu postu silmek istediginize emin misiniz?')) return;
+      if (!confirm('Delete this post?')) return;
       try {
         await api(`/api/posts/${id}`, { method: 'DELETE' });
-        toast('Post silindi');
+        toast('Post deleted');
+        closeModal();
         loadPosts();
       } catch (err) { toast(err.message, 'error'); }
     }
 
-    // ── Generate Content ──
+    // ── Generate AI Content ──
     function openGenerateModal() {
-      if (projects.length === 0) { toast('Once bir proje olusturun', 'error'); return; }
+      if (projects.length === 0) { toast('Please create a project first', 'error'); return; }
       const body = `
         <div class="form-group">
-          <label>Proje</label>
+          <label>Target Project</label>
           <select id="gf-project" onchange="onGenerateProjectChange()">
             ${projects.map(p => `<option value="${p.id}" data-config="${esc(JSON.stringify(p.config||{}))}">${esc(p.name)}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group">
-          <label>Platform</label>
-          <select id="gf-platform">
-            <option value="twitter">Twitter</option>
-            <option value="instagram">Instagram</option>
-            <option value="youtube">YouTube</option>
-            <option value="tiktok">TikTok</option>
-          </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>Platform</label>
+            <select id="gf-platform">
+              <option value="twitter">Twitter</option>
+              <option value="instagram">Instagram</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tone</label>
+            <select id="gf-tone">
+              ${['emotional','informative','urgent','hopeful','friendly'].map(t => `<option value="${t}">${t}</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label>Ton</label>
-          <select id="gf-tone">
-            ${['emotional','informative','urgent','hopeful','friendly'].map(t =>
-              `<option value="${t}">${t}</option>`
-            ).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Icerik Turu</label>
+          <label>Content Format</label>
           <select id="gf-contentType">
-            ${['text','image','video','story','reel','short'].map(t =>
-              `<option value="${t}">${t}</option>`
-            ).join('')}
+            <option value="text">Standard Text Post</option>
+            <option value="image">Image + Text Post</option>
+            <option value="video">Full AI Video (Ken Burns + TTS)</option>
+            <option value="reel">Instagram Reel</option>
+            <option value="short">YouTube Short</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Prompt</label>
-          <textarea id="gf-prompt" rows="4" placeholder="Icerik uretim prompt'u yazin..."></textarea>
+          <label>Topic / Prompt</label>
+          <textarea id="gf-prompt" placeholder="Describe the topic, news, or message to generate..."></textarea>
         </div>
-        <div id="gf-preview" style="display:none">
-          <div style="margin-top:16px;margin-bottom:8px;font-size:0.8rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Onizleme</div>
-          <div class="preview-box" id="gf-preview-text"></div>
-          <div class="preview-hashtags" id="gf-preview-hashtags"></div>
+        <div id="gf-preview" style="display:none;margin-top:14px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px">Generated Result</div>
+          <div id="gf-preview-text" style="font-size:0.85rem;white-space:pre-wrap;color:var(--text)"></div>
+          <div id="gf-preview-hashtags" style="color:var(--accent);font-size:0.8rem;margin-top:8px"></div>
         </div>`;
       const footer = `
-        <button class="btn btn-secondary" onclick="closeModal()">Iptal</button>
-        <button class="btn btn-primary" id="gf-submit" onclick="generateContent()">Uret</button>`;
-      openModal('Icerik Uret', body, footer);
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="gf-submit" onclick="generateContent()">Generate Post</button>`;
+      openModal('Generate AI Content', body, footer);
       onGenerateProjectChange();
     }
 
@@ -1370,14 +1467,12 @@
     async function generateContent() {
       const btn = document.getElementById('gf-submit');
       const prompt = document.getElementById('gf-prompt').value.trim();
-      if (!prompt) { toast('Prompt zorunlu', 'error'); return; }
+      if (!prompt) { toast('Prompt is required', 'error'); return; }
 
       btn.disabled = true;
       const ct = document.getElementById('gf-contentType').value;
       const isVideo = ['video','short','reel'].includes(ct);
-      btn.innerHTML = isVideo
-        ? '<span class="spinner"></span> Video uretiliyor (~40sn)...'
-        : '<span class="spinner"></span> Uretiliyor...';
+      btn.innerHTML = isVideo ? '<span class="spinner"></span> Rendering AI Video (~45s)...' : '<span class="spinner"></span> Generating...';
 
       try {
         const body = {
@@ -1387,53 +1482,237 @@
           contentType: ct,
           prompt,
         };
-        // Video takes longer — use raw fetch with no timeout
         const resp = await fetch('/api/posts/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(localStorage.getItem('session_token') ? { 'Authorization': `Bearer ${localStorage.getItem('session_token')}` } : {}),
+          },
           body: JSON.stringify(body),
         });
         const result = await resp.json();
-        if (!resp.ok) throw new Error(result.error || 'Bir hata olustu');
+        if (!resp.ok) throw new Error(result.error || 'Generation failed');
 
         const preview = document.getElementById('gf-preview');
         preview.style.display = 'block';
-        const textVal = result.generated?.text || result.post?.text || '';
-        const tags = result.generated?.hashtags || result.post?.hashtags || [];
-        document.getElementById('gf-preview-text').textContent = textVal;
-        document.getElementById('gf-preview-hashtags').textContent = tags.map(t => t.startsWith('#') ? t : '#' + t).join(' ');
-
-        // Show video player if video was generated
-        const videoUrl = (result.generated?.mediaUrls || result.post?.mediaUrls || []).find(u => u?.endsWith('.mp4'));
-        let videoEl = document.getElementById('gf-preview-video');
-        if (videoUrl) {
-          if (!videoEl) {
-            videoEl = document.createElement('video');
-            videoEl.id = 'gf-preview-video';
-            videoEl.controls = true;
-            videoEl.style.cssText = 'width:100%;max-height:360px;border-radius:8px;background:#000;margin-top:12px';
-            preview.insertBefore(videoEl, preview.firstChild);
-          }
-          videoEl.src = videoUrl;
-          videoEl.style.display = '';
-        } else if (videoEl) {
-          videoEl.style.display = 'none';
-        }
-
-        // Scroll preview into view
-        preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Refresh posts list
+        document.getElementById('gf-preview-text').textContent = result.generated?.text || result.post?.text || '';
+        document.getElementById('gf-preview-hashtags').textContent = (result.generated?.hashtags || []).map(t => '#' + t.replace(/^#/, '')).join(' ');
+        
         loadPosts();
-
-        toast('Icerik uretildi ve inceleme olarak kaydedildi');
-        btn.textContent = 'Tekrar Uret';
+        toast('Content generated successfully!');
+        btn.textContent = 'Generate Another';
         btn.disabled = false;
       } catch (err) {
         toast(err.message, 'error');
-        btn.textContent = 'Uret';
+        btn.textContent = 'Generate Post';
         btn.disabled = false;
       }
+    }
+
+    // ── DATA STORE & HISTORY ──
+    async function loadHistory() {
+      loadHistoryStats();
+      loadHistoryPosts();
+    }
+
+    async function setHistoryPeriod(period, btn) {
+      currentHistoryPeriod = period;
+      document.querySelectorAll('.period-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      loadHistory();
+    }
+
+    async function loadHistoryStats() {
+      try {
+        const data = await api(`/api/history/stats?period=${currentHistoryPeriod}`);
+        const ov = data.overview || {};
+        const fmt = n => Number(n || 0).toLocaleString();
+
+        document.getElementById('hist-total-generated').textContent = fmt(ov.totalGenerated);
+        document.getElementById('hist-total-published').textContent = fmt(ov.totalPublished);
+        document.getElementById('hist-total-impressions').textContent = fmt(ov.totalImpressions);
+        document.getElementById('hist-total-likes').textContent = fmt(ov.totalLikes);
+        document.getElementById('hist-avg-quality').textContent = (ov.avgQualityScore || 0) + '/100';
+        document.getElementById('hist-avg-safety').textContent = (ov.avgSafetyScore || 100) + '/100';
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function loadHistoryPosts() {
+      try {
+        const plat = document.getElementById('hist-platform-filter').value;
+        const stat = document.getElementById('hist-status-filter').value;
+        const search = document.getElementById('hist-search').value.trim();
+
+        const params = new URLSearchParams();
+        params.set('period', currentHistoryPeriod);
+        if (plat) params.set('platform', plat);
+        if (stat) params.set('status', stat);
+        if (search) params.set('search', search);
+
+        const data = await api(`/api/history/posts?${params}`);
+        historyPostsCache = data.posts || [];
+        const tbody = document.getElementById('hist-posts-table');
+
+        if (historyPostsCache.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty">No historical records match the selected criteria</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = historyPostsCache.map(p => `
+          <tr style="cursor:pointer" onclick="viewHistoryDetail('${p.id}')">
+            <td style="color:var(--text-muted);font-size:0.75rem">${new Date(p.createdAt).toLocaleDateString()} ${new Date(p.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+            <td><span class="badge badge-${p.platform}">${p.platform}</span></td>
+            <td><strong>@${esc(p.accountUsername || 'system')}</strong><br><span style="font-size:0.7rem;color:var(--text-muted)">${esc(p.projectName || '-')}</span></td>
+            <td style="color:var(--text-secondary);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((p.text || '').substring(0, 75))}</td>
+            <td><span style="font-size:0.75rem;color:var(--accent)">Q: ${p.qualityScore ?? '-'}/100</span> · <span style="font-size:0.75rem;color:var(--success)">S: ${p.safetyScore ?? 100}</span></td>
+            <td><span class="badge badge-${p.status}">${p.status}</span></td>
+            <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();viewHistoryDetail('${p.id}')">Inspect</button></td>
+          </tr>`).join('');
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    function debounceHistorySearch() {
+      clearTimeout(historyDebounceTimer);
+      historyDebounceTimer = setTimeout(loadHistoryPosts, 300);
+    }
+
+    function viewHistoryDetail(id) {
+      const p = historyPostsCache.find(x => x.id === id);
+      if (!p) return;
+      const hashtags = (p.hashtags || []).map(t => '#' + t.replace(/^#/, '')).join(' ');
+      const media = (p.mediaUrls || []).map(u => u.endsWith('.mp4') ? `<video controls src="${u}" style="max-width:100%;border-radius:8px;margin-top:8px"></video>` : `<img src="${u}" style="max-width:100%;border-radius:8px;margin-top:8px">`).join('');
+
+      const body = `
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <span class="badge badge-${p.platform}">${p.platform}</span>
+          <span class="badge badge-${p.status}">${p.status}</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto">${new Date(p.createdAt).toLocaleString()}</span>
+        </div>
+        <div class="form-group">
+          <label>Post Text</label>
+          <div style="background:var(--bg-input);padding:14px;border-radius:8px;border:1px solid var(--border);font-size:0.85rem;white-space:pre-wrap">${esc(p.text)}</div>
+        </div>
+        ${hashtags ? `<div class="form-group"><label>Hashtags</label><div style="color:var(--accent);font-size:0.8rem">${esc(hashtags)}</div></div>` : ''}
+        ${media ? `<div class="form-group"><label>Media</label>${media}</div>` : ''}
+        ${p.platformUrl ? `<div class="form-group"><a href="${esc(p.platformUrl)}" target="_blank" style="color:var(--accent);font-size:0.8rem">Open Live Post on Platform ↗</a></div>` : ''}
+        ${p.errorMessage ? `<div class="form-group"><label style="color:var(--danger)">Error Log</label><div style="background:#220b0b;color:#f87171;padding:10px;border-radius:6px;font-size:0.8rem">${esc(p.errorMessage)}</div></div>` : ''}
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);text-align:center">
+          <div><div style="font-size:0.7rem;color:var(--text-muted)">LIKES</div><div style="font-weight:700">${p.likes || 0}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted)">COMMENTS</div><div style="font-weight:700">${p.comments || 0}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted)">SHARES</div><div style="font-weight:700">${p.shares || 0}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted)">IMPRESSIONS</div><div style="font-weight:700">${p.impressions || 0}</div></div>
+        </div>`;
+      const footer = `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
+      openModal('Post Database Record', body, footer);
+    }
+
+    function exportHistory(format) {
+      if (!historyPostsCache.length) { toast('No records to export', 'error'); return; }
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(historyPostsCache, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `social_agent_history_${Date.now()}.json`;
+        a.click();
+      } else {
+        const headers = ['id','platform','account','status','text','qualityScore','safetyScore','likes','createdAt'];
+        const csvRows = [headers.join(',')];
+        for (const p of historyPostsCache) {
+          const row = [
+            p.id,
+            p.platform,
+            p.accountUsername || '',
+            p.status,
+            `"${(p.text || '').replace(/"/g, '""')}"`,
+            p.qualityScore ?? '',
+            p.safetyScore ?? '',
+            p.likes ?? 0,
+            p.createdAt
+          ];
+          csvRows.push(row.join(','));
+        }
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `social_agent_history_${Date.now()}.csv`;
+        a.click();
+      }
+      toast(`Exported ${historyPostsCache.length} records as ${format.toUpperCase()}`);
+    }
+
+    // ── SETTINGS & API KEYS ──
+    async function loadSettings() {
+      try {
+        const data = await api('/api/settings');
+        for (const [key, item] of Object.entries(data)) {
+          const input = document.getElementById(`cfg-${key}`);
+          if (input) {
+            if (input.tagName === 'SELECT') {
+              input.value = item.value || input.value;
+            } else if (input.type === 'number') {
+              input.value = item.value || input.value;
+            } else {
+              input.value = item.value || (item.isSet ? item.masked : '');
+            }
+          }
+        }
+
+        // Status Badges
+        const geminiBadge = document.getElementById('badge-gemini');
+        if (geminiBadge) {
+          geminiBadge.className = data.GEMINI_API_KEY?.isSet ? 'badge badge-configured' : 'badge badge-missing';
+          geminiBadge.textContent = data.GEMINI_API_KEY?.isSet ? 'Configured' : 'Missing Key';
+        }
+
+        const pexelsBadge = document.getElementById('badge-pexels');
+        if (pexelsBadge) {
+          pexelsBadge.className = data.PEXELS_API_KEY?.isSet ? 'badge badge-configured' : 'badge badge-inactive';
+          pexelsBadge.textContent = data.PEXELS_API_KEY?.isSet ? 'Configured' : 'Optional';
+        }
+      } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function saveAllSettings() {
+      const keys = [
+        'GEMINI_API_KEY',
+        'GEMINI_MODEL',
+        'GEMINI_IMAGE_MODEL',
+        'PEXELS_API_KEY',
+        'TWITTER_API_KEY',
+        'TWITTER_API_SECRET',
+        'TWITTER_ACCESS_TOKEN',
+        'TWITTER_ACCESS_SECRET',
+        'INSTAGRAM_ACCESS_TOKEN',
+        'INSTAGRAM_BUSINESS_ACCOUNT_ID',
+        'YOUTUBE_CLIENT_ID',
+        'YOUTUBE_CLIENT_SECRET',
+        'YOUTUBE_REFRESH_TOKEN',
+        'TIKTOK_ACCESS_TOKEN',
+        'WHATSAPP_ADMIN_NUMBER',
+        'PUBLIC_BASE_URL',
+        'QUALITY_CHECK_ENABLED',
+        'QUALITY_MIN_SCORE',
+        'DASHBOARD_USERNAME',
+        'DASHBOARD_PASSWORD',
+      ];
+
+      const payload = {};
+      for (const k of keys) {
+        const el = document.getElementById(`cfg-${k}`);
+        if (el) {
+          const val = el.value.trim();
+          // If masked, ignore so we don't save 'AIza...****'
+          if (!val.includes('...')) {
+            payload[k] = val;
+          }
+        }
+      }
+
+      try {
+        await api('/api/settings', { method: 'POST', body: { settings: payload } });
+        toast('All settings saved to database successfully!');
+        loadSettings();
+      } catch (err) { toast(err.message, 'error'); }
     }
 
     // ── Helpers ──
@@ -1444,12 +1723,17 @@
     }
 
     // ── Init ──
-    async function init() {
+    async function initApp() {
       await loadProjects();
       loadDashboard();
     }
-    init();
-    setInterval(loadDashboard, 30000);
+
+    checkAuth();
+    setInterval(() => {
+      if (document.getElementById('tab-dashboard').classList.contains('active')) {
+        loadDashboard();
+      }
+    }, 30000);
   </script>
 </body>
 </html>

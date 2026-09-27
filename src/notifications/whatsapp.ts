@@ -34,14 +34,17 @@ export async function initWhatsApp(): Promise<void> {
   await client.initialize();
 }
 
+import { settingsStore } from '../config/settings-store.js';
+
 export async function sendAdminMessage(message: string): Promise<void> {
-  if (!client || !ready || !env.WHATSAPP_ADMIN_NUMBER) {
+  const adminNumber = settingsStore.get('WHATSAPP_ADMIN_NUMBER', env.WHATSAPP_ADMIN_NUMBER || '');
+  if (!client || !ready || !adminNumber) {
     logger.debug('WhatsApp not available, skipping notification');
     return;
   }
 
   try {
-    const chatId = `${env.WHATSAPP_ADMIN_NUMBER}@c.us`;
+    const chatId = `${adminNumber}@c.us`;
     await client.sendMessage(chatId, message);
     logger.debug('WhatsApp message sent to admin');
   } catch (err) {
@@ -50,6 +53,7 @@ export async function sendAdminMessage(message: string): Promise<void> {
     });
   }
 }
+
 
 export async function notifyError(source: string, error: string): Promise<void> {
   await sendAdminMessage(`⚠️ *HATA*\nKaynak: ${source}\nHata: ${error}\nZaman: ${new Date().toLocaleString('tr-TR')}`);
