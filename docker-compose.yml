@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bot}
+      POSTGRES_DB: social_media_bot
+    # Only reachable from this machine — remove the binding entirely if you don't need host access
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bot} -d social_media_bot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    # All settings come from .env; the values below override it for the container network
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bot}:${POSTGRES_PASSWORD:-bot}@db:5432/social_media_bot
+      PORT: 3000
+      NODE_ENV: production
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+    volumes:
+      - whatsapp_session:/app/.wwebjs_auth
+      - temp_data:/app/temp
+      - public_data:/app/public
+
+volumes:
+  pgdata:
+  whatsapp_session:
+  temp_data:
+  public_data:
