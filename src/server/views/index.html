@@ -2431,7 +2431,14 @@
           body: { apiKey, model }
         });
 
-        if (res.model && modelEl) {
+        if (Array.isArray(res.availableModels) && res.availableModels.length > 0) {
+          const selects = [document.getElementById('modal-ai-text-model'), document.getElementById('cfg-GEMINI_MODEL')].filter(Boolean);
+          selects.forEach(sel => {
+            const currentVal = sel.value;
+            sel.innerHTML = res.availableModels.map(m => `<option value="${esc(m)}">${esc(m)}${m === res.model ? ' (Active)' : ''}</option>`).join('');
+            sel.value = res.model || currentVal;
+          });
+        } else if (res.model && modelEl) {
           modelEl.value = res.model;
         }
         const successHtml = `<span style="color:var(--success);font-weight:700">✓ Connected!</span> Latency: <strong>${res.latencyMs}ms</strong> | Model: <strong>${esc(res.model)}</strong>`;

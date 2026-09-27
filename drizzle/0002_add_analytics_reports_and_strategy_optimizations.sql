@@ -1,3 +1,9 @@
+CREATE TABLE IF NOT EXISTS "system_settings" (
+	"key" varchar(100) PRIMARY KEY NOT NULL,
+	"value" text NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "analytics_reports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"project_id" uuid,

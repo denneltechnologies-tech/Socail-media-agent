@@ -96,21 +96,55 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
   }
 
   const startTime = Date.now();
-  // Candidate models: requested model, then latest GA gemini-2.0-flash, then high-compatibility gemini-1.5-flash
-  const candidateModels = [
-    requestedModel,
+  const ai = new GoogleGenAI({ apiKey: keyToTest });
+
+  // 1. Discover all models enabled for this specific Google account / API key
+  const availableModels: string[] = [];
+  try {
+    const listPager = await ai.models.list();
+    for await (const m of listPager) {
+      if (m.name) {
+        const clean = m.name.replace(/^models\//, '');
+        const raw = m as unknown as Record<string, unknown>;
+        const methods = Array.isArray(raw.supportedGenerationMethods) ? (raw.supportedGenerationMethods as string[]) : [];
+        if (methods.length === 0 || methods.includes('generateContent')) {
+          availableModels.push(clean);
+        }
+      }
+    }
+  } catch (listErr: unknown) {
+    const msg = listErr instanceof Error ? listErr.message : String(listErr);
+    logger.warn('Failed to query ai.models.list()', { error: msg });
+  }
+
+  // 2. Build prioritized candidate list
+  const candidates: string[] = [];
+  if (requestedModel) candidates.push(requestedModel);
+
+  // If Google returned models, prioritize them
+  if (availableModels.length > 0) {
+    const flashList = availableModels.filter((m) => m.includes('flash'));
+    const otherList = availableModels.filter((m) => !m.includes('flash') && m.includes('gemini'));
+    candidates.push(...flashList, ...otherList, ...availableModels);
+  }
+
+  // Standard production fallbacks
+  candidates.push(
     'gemini-2.0-flash',
     'gemini-1.5-flash',
+    'gemini-2.0-flash-exp',
     'gemini-1.5-pro',
-  ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+    'gemini-2.0-flash-001',
+    'gemini-1.5-flash-8b',
+  );
+
+  const uniqueCandidates = Array.from(new Set(candidates.filter(Boolean)));
 
   let lastError: Error | null = null;
   let workingModel = '';
   let responseText = '';
 
-  const ai = new GoogleGenAI({ apiKey: keyToTest });
-
-  for (const candidate of candidateModels) {
+  for (const candidate of uniqueCandidates) {
     try {
       const response = await ai.models.generateContent({
         model: candidate,
@@ -120,7 +154,7 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
       workingModel = candidate;
       responseText = response.text?.trim() || 'READY';
       break;
-    } catch (err) {
+    } catch (err: unknown) {
       lastError = err instanceof Error ? err : new Error(String(err));
     }
   }
@@ -135,6 +169,7 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
       success: true,
       message: `Gemini AI API connection successful with ${workingModel}!`,
       model: workingModel,
+      availableModels: availableModels.length > 0 ? availableModels : [workingModel],
       latencyMs,
       response: responseText,
     });
@@ -143,6 +178,7 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
     res.status(400).json({
       success: false,
       error: `Gemini verification failed: ${message}`,
+      availableModels,
       latencyMs,
     });
   }
