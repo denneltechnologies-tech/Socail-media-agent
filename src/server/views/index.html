@@ -819,16 +819,15 @@
               <div class="form-group">
                 <label>Text Model</label>
                 <select id="cfg-GEMINI_MODEL">
-                  <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & recommended)</option>
-                  <option value="gemini-2.5-pro">gemini-2.5-pro (High reasoning)</option>
-                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash (Fast, latest & recommended)</option>
+                  <option value="gemini-1.5-flash">gemini-1.5-flash (High speed & quota)</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro (High reasoning)</option>
                 </select>
               </div>
               <div class="form-group">
                 <label>Image Generation Model</label>
                 <select id="cfg-GEMINI_IMAGE_MODEL">
-                  <option value="imagen-4.0-generate-001">imagen-4.0-generate-001</option>
-                  <option value="imagen-3.0-generate-002">imagen-3.0-generate-002</option>
+                  <option value="imagen-3.0-generate-002">imagen-3.0-generate-002 (Official Google Imagen 3)</option>
                 </select>
               </div>
             </div>
@@ -1020,16 +1019,15 @@
           <div class="form-group">
             <label>Text Model</label>
             <select id="modal-ai-text-model">
-              <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & recommended)</option>
-              <option value="gemini-2.5-pro">gemini-2.5-pro (Complex reasoning)</option>
-              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash (Fast, latest & recommended)</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash (High speed & quota)</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro (Complex reasoning)</option>
             </select>
           </div>
           <div class="form-group">
             <label>Image Model</label>
             <select id="modal-ai-image-model">
-              <option value="imagen-4.0-generate-001">imagen-4.0-generate-001</option>
-              <option value="imagen-3.0-generate-002">imagen-3.0-generate-002</option>
+              <option value="imagen-3.0-generate-002">imagen-3.0-generate-002 (Official Google Imagen 3)</option>
             </select>
           </div>
         </div>
@@ -2326,7 +2324,7 @@
         systemSettingsCache = data;
 
         const isConfigured = Boolean(data.GEMINI_API_KEY?.isSet);
-        const modelName = data.GEMINI_MODEL?.value || 'gemini-2.5-flash';
+        const modelName = data.GEMINI_MODEL?.value || 'gemini-2.0-flash';
 
         const btn = document.getElementById('topbar-ai-btn');
         const lbl = document.getElementById('topbar-ai-label');
@@ -2411,7 +2409,7 @@
         apiKey = ''; // test with stored key
       }
 
-      const model = modelEl ? modelEl.value : 'gemini-2.5-flash';
+      const model = modelEl ? modelEl.value : 'gemini-2.0-flash';
 
       if (btn) {
         btn.disabled = true;
@@ -2433,6 +2431,9 @@
           body: { apiKey, model }
         });
 
+        if (res.model && modelEl) {
+          modelEl.value = res.model;
+        }
         const successHtml = `<span style="color:var(--success);font-weight:700">✓ Connected!</span> Latency: <strong>${res.latencyMs}ms</strong> | Model: <strong>${esc(res.model)}</strong>`;
         if (testBox) {
           testBox.style.background = 'rgba(16, 185, 129, 0.1)';
@@ -2477,8 +2478,8 @@
         return;
       }
 
-      const model = textModelSel ? textModelSel.value : 'gemini-2.5-flash';
-      const imageModel = imageModelSel ? imageModelSel.value : 'imagen-4.0-generate-001';
+      const model = textModelSel ? textModelSel.value : 'gemini-2.0-flash';
+      const imageModel = imageModelSel ? imageModelSel.value : 'imagen-3.0-generate-002';
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Saving...';

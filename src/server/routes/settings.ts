@@ -88,7 +88,7 @@ settingsRouter.post('/ai-key', asyncHandler(async (req, res) => {
 settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
   const customKey = typeof req.body?.apiKey === 'string' ? req.body.apiKey.trim() : '';
   const keyToTest = customKey || settingsStore.get('GEMINI_API_KEY') || env.GEMINI_API_KEY;
-  const modelToTest = (typeof req.body?.model === 'string' && req.body.model.trim()) || settingsStore.get('GEMINI_MODEL') || 'gemini-2.5-flash';
+  const requestedModel = (typeof req.body?.model === 'string' && req.body.model.trim()) || settingsStore.get('GEMINI_MODEL') || 'gemini-2.0-flash';
 
   if (!keyToTest || keyToTest === 'REPLACE_WITH_YOUR_GEMINI_KEY') {
     res.status(400).json({ success: false, error: 'No Gemini API key provided or configured' });
@@ -96,27 +96,54 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
   }
 
   const startTime = Date.now();
-  try {
-    const ai = new GoogleGenAI({ apiKey: keyToTest });
-    const response = await ai.models.generateContent({
-      model: modelToTest,
-      contents: 'Respond with the single word: "READY"',
-      config: { maxOutputTokens: 10 },
-    });
-    const latencyMs = Date.now() - startTime;
+  // Candidate models: requested model, then latest GA gemini-2.0-flash, then high-compatibility gemini-1.5-flash
+  const candidateModels = [
+    requestedModel,
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+  ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+
+  let lastError: Error | null = null;
+  let workingModel = '';
+  let responseText = '';
+
+  const ai = new GoogleGenAI({ apiKey: keyToTest });
+
+  for (const candidate of candidateModels) {
+    try {
+      const response = await ai.models.generateContent({
+        model: candidate,
+        contents: 'Respond with the single word: "READY"',
+        config: { maxOutputTokens: 10 },
+      });
+      workingModel = candidate;
+      responseText = response.text?.trim() || 'READY';
+      break;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  const latencyMs = Date.now() - startTime;
+
+  if (workingModel) {
+    if (workingModel !== settingsStore.get('GEMINI_MODEL')) {
+      await settingsStore.set('GEMINI_MODEL', workingModel);
+    }
     res.json({
       success: true,
-      message: 'Gemini AI API connection successful!',
-      model: modelToTest,
+      message: `Gemini AI API connection successful with ${workingModel}!`,
+      model: workingModel,
       latencyMs,
-      response: response.text?.trim() || 'READY',
+      response: responseText,
     });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
+  } else {
+    const message = lastError?.message || 'Verification failed';
     res.status(400).json({
       success: false,
       error: `Gemini verification failed: ${message}`,
-      latencyMs: Date.now() - startTime,
+      latencyMs,
     });
   }
 }));

@@ -13,8 +13,8 @@ const booleanFlag = (defaultValue: boolean) =>
 export const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   GEMINI_API_KEY: z.string().min(1),
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
-  GEMINI_IMAGE_MODEL: z.string().default('imagen-4.0-generate-001'),
+  GEMINI_MODEL: z.string().default('gemini-2.0-flash'),
+  GEMINI_IMAGE_MODEL: z.string().default('imagen-3.0-generate-002'),
 
   TWITTER_API_KEY: optionalString(),
   TWITTER_API_SECRET: optionalString(),
