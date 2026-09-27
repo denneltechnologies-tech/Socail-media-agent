@@ -29,11 +29,18 @@ export interface AuthenticatedRequest extends Request {
  * - Basic Auth (for curl/CLI compatibility)
  * Does NOT emit WWW-Authenticate header by default, allowing in-page login instead of browser popups.
  */
-export function appAuth(options: { publicPaths: string[] }): RequestHandler {
-  const { publicPaths } = options;
+export function appAuth(options: {
+  publicPaths: string[];
+  username?: string;
+  password?: string;
+  challenge?: boolean;
+}): RequestHandler {
+  const { publicPaths, challenge = false } = options;
 
   return (req: AuthenticatedRequest, res, next) => {
-    const { username, password } = getAdminCredentials();
+    const adminCreds = getAdminCredentials();
+    const username = options.username ?? adminCreds.username;
+    const password = options.password !== undefined ? options.password : adminCreds.password;
 
     // If no password is set, authentication is disabled
     if (!password) {
@@ -90,12 +97,20 @@ export function appAuth(options: { publicPaths: string[] }): RequestHandler {
       return;
     }
 
-    // Unauthorized API request - NO WWW-Authenticate to avoid browser spoof/alert popup!
+    // Unauthorized API request - only emit WWW-Authenticate if challenge is explicitly enabled or client sent Basic auth
+    if (challenge || authHeader.startsWith('Basic ')) {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Dashboard"');
+    }
     res.status(401).json({ error: 'Authentication required' });
   };
 }
 
-export const basicAuth = appAuth;
+export const basicAuth = (options: {
+  username?: string;
+  password?: string;
+  publicPaths: string[];
+  challenge?: boolean;
+}): RequestHandler => appAuth({ challenge: true, ...options });
 
 
 /** Rejects requests whose `:id` route parameter is not a UUID (avoids leaking Postgres errors) */

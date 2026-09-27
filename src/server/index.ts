@@ -17,7 +17,6 @@ import { authRouter } from './routes/auth.js';
 import { settingsRouter } from './routes/settings.js';
 import { historyRouter } from './routes/history.js';
 import { appAuth, errorHandler } from './middleware.js';
-import { settingsStore } from '../config/settings-store.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

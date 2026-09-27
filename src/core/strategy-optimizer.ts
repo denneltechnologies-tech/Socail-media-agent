@@ -178,6 +178,31 @@ export async function optimizeStrategies(): Promise<void> {
       changes.push(changeDesc);
       logger.info(`Strategy optimized for ${account.username}`, { updates });
     }
+
+    // Persist optimization analysis to database
+    try {
+      await db.insert(schema.strategyOptimizations).values({
+        accountId: account.id,
+        periodDays: 7,
+        postsAnalyzed: accountPosts.length,
+        changes: updates.length > 0 ? updates : ['No strategy change needed'],
+        analysisData: {
+          bestTone,
+          bestToneAvg,
+          toneDistribution: Object.fromEntries(
+            [...toneEngagement.entries()].map(([t, d]) => [t, { count: d.count, avg: d.total / d.count }]),
+          ),
+          hourDistribution: Object.fromEntries(
+            [...hourEngagement.entries()].map(([h, d]) => [h, { count: d.count, avg: d.total / d.count }]),
+          ),
+        },
+      });
+    } catch (err) {
+      logger.warn('Failed to record strategy optimization history', {
+        accountId: account.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   // Sync crons with new strategies

@@ -38,7 +38,7 @@ export function languageName(code: string | undefined): string | undefined {
  */
 export function buildGenerationPrompt(request: ContentRequest): string {
   const limits = CONTENT_LIMITS[request.platform as Platform];
-  const language = languageName(request.context?.['language'] as string | undefined);
+  const language = languageName(request.context?.['language'] as string | undefined) || 'English';
   const tone = TONE_DESCRIPTIONS[request.tone as Tone];
 
   const rules = [
@@ -50,7 +50,7 @@ export function buildGenerationPrompt(request: ContentRequest): string {
       : undefined,
     limits ? `Return at most ${limits.maxHashtags} hashtags in the "hashtags" array and do not repeat them inside "text".` : undefined,
     CONTENT_TYPE_HINTS[request.contentType as ContentType],
-    language ? `Write the response in ${language}.` : undefined,
+    `Write the response in ${language}.`,
   ].filter(Boolean);
 
   return [

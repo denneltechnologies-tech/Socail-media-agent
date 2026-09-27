@@ -18,7 +18,7 @@ const VOICES: Record<string, string> = {
   ar: 'ar-SA-ZariyahNeural',
 };
 
-export const DEFAULT_VOICE = VOICES['tr']!;
+export const DEFAULT_VOICE = VOICES['en']!; // en-US-AriaNeural (English default)
 
 export function voiceForLanguage(language: string | undefined): string {
   if (!language) return DEFAULT_VOICE;

@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm';
 import { db, schema } from '../db/index.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
@@ -6,6 +5,10 @@ import { logger } from './logger.js';
 class SettingsStore {
   private cache = new Map<string, string>();
   private initialized = false;
+
+  isInitialized(): boolean {
+    return this.initialized;
+  }
 
   async init(): Promise<void> {
     try {

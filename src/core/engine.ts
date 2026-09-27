@@ -399,7 +399,7 @@ export class Engine {
       tone: strategy.tone,
       prompt,
       context: {
-        language: strategy.language,
+        language: strategy.language || (project?.config as Record<string, unknown> | null)?.['language'] as string || 'en',
         projectConfig: project?.config ?? {},
         projectName: project?.name,
       },
@@ -557,7 +557,7 @@ export class Engine {
       contentType: ContentType.TEXT,
       tone: strategy.tone,
       prompt: replyPrompt,
-      context: { language: strategy.language },
+      context: { language: strategy.language || 'en' },
     });
     const replyText = generated.text;
 
@@ -710,9 +710,9 @@ export class Engine {
 
   private async sendDailyReport(): Promise<void> {
     try {
-      const report = await generateReport(1);
+      const report = await generateReport({ days: 1, reportType: 'daily', saveToDb: true });
       await notifyDailySummary(report);
-      logger.info('Daily report sent successfully');
+      logger.info('Daily report stored and sent successfully');
     } catch (err) {
       logger.error('Failed to send daily report', { error: errorMessage(err) });
     }

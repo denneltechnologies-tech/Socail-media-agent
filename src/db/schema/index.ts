@@ -11,7 +11,15 @@ import {
   boolean,
   index,
 } from 'drizzle-orm/pg-core';
-import type { AccountStrategy } from '../../types/index.js';
+import type {
+  AccountStrategy,
+  ReportMetrics,
+  ReportTopPost,
+  ReportAccountBreakdown,
+  ReportPlatformBreakdown,
+  ReportTrendPoint,
+  ReportInsight,
+} from '../../types/index.js';
 
 export const platformEnum = pgEnum('platform', ['twitter', 'instagram', 'youtube', 'tiktok']);
 export const contentTypeEnum = pgEnum('content_type', ['text', 'image', 'video', 'story', 'reel', 'short']);
@@ -122,4 +130,37 @@ export const systemSettings = pgTable('system_settings', {
   value: text('value').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const analyticsReports = pgTable('analytics_reports', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').references(() => projects.id),
+  reportType: varchar('report_type', { length: 50 }).notNull().default('custom'),
+  period: varchar('period', { length: 50 }).notNull(),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+  summary: text('summary'),
+  metrics: jsonb('metrics').$type<ReportMetrics>().notNull(),
+  topPosts: jsonb('top_posts').$type<ReportTopPost[]>().default([]),
+  accountBreakdowns: jsonb('account_breakdowns').$type<ReportAccountBreakdown[]>().default([]),
+  platformBreakdown: jsonb('platform_breakdown').$type<ReportPlatformBreakdown[]>().default([]),
+  trends: jsonb('trends').$type<ReportTrendPoint[]>().default([]),
+  insights: jsonb('insights').$type<ReportInsight[]>().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('analytics_reports_created_idx').on(t.createdAt.desc()),
+  index('analytics_reports_project_created_idx').on(t.projectId, t.createdAt.desc()),
+]);
+
+export const strategyOptimizations = pgTable('strategy_optimizations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id),
+  periodDays: integer('period_days').notNull().default(7),
+  postsAnalyzed: integer('posts_analyzed').notNull().default(0),
+  changes: jsonb('changes').$type<string[]>().default([]),
+  analysisData: jsonb('analysis_data').$type<Record<string, unknown>>().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('strategy_optimizations_account_idx').on(t.accountId, t.createdAt.desc()),
+  index('strategy_optimizations_created_idx').on(t.createdAt.desc()),
+]);
 

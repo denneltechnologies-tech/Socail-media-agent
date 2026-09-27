@@ -15,6 +15,13 @@
       "when": 1789328397741,
       "tag": "0001_add_metadata_and_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789328500000,
+      "tag": "0002_add_analytics_reports_and_strategy_optimizations",
+      "breakpoints": true
     }
   ]
 }

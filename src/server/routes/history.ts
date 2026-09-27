@@ -1,7 +1,7 @@
-import { Router, type Response } from 'express';
-import { eq, and, sql, desc, like, or } from 'drizzle-orm';
+import { Router } from 'express';
+import { sql, desc } from 'drizzle-orm';
 import { db, schema } from '../../db/index.js';
-import { asyncHandler, isUuid } from '../middleware.js';
+import { asyncHandler } from '../middleware.js';
 
 export const historyRouter = Router();
 

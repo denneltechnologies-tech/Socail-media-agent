@@ -99,3 +99,78 @@ export interface PostRecord {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface ReportMetrics {
+  totalPosts: number;
+  postsPublished: number;
+  postsFailed: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  totalImpressions: number;
+  avgEngagementRate: number;
+}
+
+export interface ReportTopPost {
+  postId: string;
+  text: string;
+  likes: number;
+  platform: string;
+  username: string;
+}
+
+export interface ReportAccountBreakdown {
+  accountId: string;
+  username: string;
+  platform: string;
+  postCount: number;
+  totalLikes: number;
+}
+
+export interface ReportPlatformBreakdown {
+  platform: string;
+  postCount: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  totalImpressions: number;
+}
+
+export interface ReportTrendPoint {
+  date: string;
+  postCount: number;
+  totalLikes: number;
+  totalImpressions: number;
+}
+
+export interface ReportInsight {
+  type: string;
+  message: string;
+}
+
+export interface AnalyticsReportRecord {
+  id: string;
+  projectId?: string | null;
+  reportType: string;
+  period: string;
+  startDate: Date;
+  endDate: Date;
+  summary?: string | null;
+  metrics: ReportMetrics;
+  topPosts: ReportTopPost[];
+  accountBreakdowns: ReportAccountBreakdown[];
+  platformBreakdown: ReportPlatformBreakdown[];
+  trends: ReportTrendPoint[];
+  insights: ReportInsight[];
+  createdAt: Date;
+}
+
+export interface StrategyOptimizationRecord {
+  id: string;
+  accountId: string;
+  periodDays: number;
+  postsAnalyzed: number;
+  changes: string[];
+  analysisData: Record<string, unknown>;
+  createdAt: Date;
+}

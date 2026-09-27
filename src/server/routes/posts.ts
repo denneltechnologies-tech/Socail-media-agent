@@ -204,6 +204,98 @@ postsRouter.post('/:id/publish', asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Queued for publishing' });
 }));
 
+postsRouter.get('/:id', asyncHandler(async (req, res) => {
+  const id = req.params['id'] as string;
+
+  const [post] = await db
+    .select({
+      id: schema.posts.id,
+      projectId: schema.posts.projectId,
+      accountId: schema.posts.accountId,
+      accountUsername: schema.accounts.username,
+      platform: schema.posts.platform,
+      contentType: schema.posts.contentType,
+      text: schema.posts.text,
+      hashtags: schema.posts.hashtags,
+      mediaUrls: schema.posts.mediaUrls,
+      status: schema.posts.status,
+      tone: schema.posts.tone,
+      platformPostId: schema.posts.platformPostId,
+      platformUrl: schema.posts.platformUrl,
+      safetyScore: schema.posts.safetyScore,
+      qualityScore: schema.posts.qualityScore,
+      metadata: schema.posts.metadata,
+      errorMessage: schema.posts.errorMessage,
+      scheduledAt: schema.posts.scheduledAt,
+      publishedAt: schema.posts.publishedAt,
+      createdAt: schema.posts.createdAt,
+      updatedAt: schema.posts.updatedAt,
+    })
+    .from(schema.posts)
+    .leftJoin(schema.accounts, eq(schema.posts.accountId, schema.accounts.id))
+    .where(eq(schema.posts.id, id))
+    .limit(1);
+
+  if (!post) {
+    res.status(404).json({ error: 'Post not found' });
+    return;
+  }
+
+  const [latestMetric] = await db
+    .select()
+    .from(schema.postAnalytics)
+    .where(eq(schema.postAnalytics.postId, id))
+    .orderBy(desc(schema.postAnalytics.fetchedAt))
+    .limit(1);
+
+  res.json({
+    ...post,
+    analytics: latestMetric ?? null,
+  });
+}));
+
+postsRouter.get('/:id/analytics-history', asyncHandler(async (req, res) => {
+  const id = req.params['id'] as string;
+
+  const [post] = await db
+    .select({ id: schema.posts.id, text: schema.posts.text, platform: schema.posts.platform, publishedAt: schema.posts.publishedAt })
+    .from(schema.posts)
+    .where(eq(schema.posts.id, id))
+    .limit(1);
+
+  if (!post) {
+    res.status(404).json({ error: 'Post not found' });
+    return;
+  }
+
+  const history = await db
+    .select()
+    .from(schema.postAnalytics)
+    .where(eq(schema.postAnalytics.postId, id))
+    .orderBy(schema.postAnalytics.fetchedAt);
+
+  const initial = history[0];
+  const latest = history[history.length - 1];
+
+  const growth = initial && latest && history.length > 1
+    ? {
+        likesGrowth: (latest.likes ?? 0) - (initial.likes ?? 0),
+        impressionsGrowth: (latest.impressions ?? 0) - (initial.impressions ?? 0),
+        commentsGrowth: (latest.comments ?? 0) - (initial.comments ?? 0),
+        sharesGrowth: (latest.shares ?? 0) - (initial.shares ?? 0),
+        reachGrowth: (latest.reach ?? 0) - (initial.reach ?? 0),
+        snapshotsCount: history.length,
+      }
+    : null;
+
+  res.json({
+    postId: id,
+    post,
+    growth,
+    history,
+  });
+}));
+
 postsRouter.patch('/:id', asyncHandler(async (req, res) => {
   const id = req.params['id'] as string;
   const body = parseBody(updatePostSchema, req, res);

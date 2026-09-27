@@ -17,6 +17,7 @@ describe('buildGenerationPrompt', () => {
     expect(prompt).toContain('280 characters');
     expect(prompt).toContain('at most 5 hashtags');
     expect(prompt).toContain('friendly');
+    expect(prompt).toContain('Write the response in English.');
   });
 
   it('adds a language instruction when requested', () => {

@@ -10,22 +10,32 @@
   <style>
     :root {
       --bg: #07090e;
-      --bg-card: #0d1117;
-      --bg-elevated: #161b22;
-      --bg-input: #0b0f14;
-      --border: #21262d;
-      --border-hover: #384252;
+      --bg-card: rgba(13, 17, 24, 0.88);
+      --bg-card-hover: rgba(20, 26, 38, 0.96);
+      --bg-elevated: #141a24;
+      --bg-input: #0a0d14;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --border-focus: rgba(56, 189, 248, 0.6);
       --text: #f0f6fc;
-      --text-secondary: #8b949e;
-      --text-muted: #586069;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
       --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.2);
-      --success: #3fb950;
-      --warning: #d29922;
-      --danger: #f85149;
+      --accent-hover: #0ea5e9;
+      --accent-glow: rgba(56, 189, 248, 0.28);
+      --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.22);
+      --danger: #f43f5e;
       --purple: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.25);
+      --radius-sm: 6px;
       --radius: 10px;
-      --radius-lg: 14px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -33,60 +43,87 @@
 
     /* Layout */
     .app { display: flex; min-height: 100vh; }
-    .sidebar { width: 240px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 50; }
-    .main { margin-left: 240px; flex: 1; padding: 32px 40px; min-height: 100vh; }
+    .sidebar { width: 240px; background: rgba(10, 13, 19, 0.95); backdrop-filter: blur(16px); border-right: 1px solid var(--border); padding: 24px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; z-index: 50; }
+    .main { margin-left: 240px; flex: 1; padding: 24px 36px 60px; min-height: 100vh; }
+
+    /* Topbar */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin-bottom: 24px; background: rgba(13, 17, 24, 0.7); backdrop-filter: blur(14px); border: 1px solid var(--border); border-radius: var(--radius-lg); gap: 16px; flex-wrap: wrap; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; font-size: 0.84rem; }
+    .system-status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: #34d399; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 9px; border-radius: 20px; letter-spacing: 0.3px; }
+    .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+    .topbar-divider { color: var(--border-hover); font-size: 0.8rem; }
+    .topbar-crumb { color: var(--text); font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    /* AI Status Pill Button */
+    .ai-status-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent); padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+    .ai-status-pill:hover { background: rgba(56, 189, 248, 0.18); border-color: var(--accent); box-shadow: 0 0 16px var(--accent-glow); }
+    .ai-status-pill.configured { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); color: #34d399; }
+    .ai-status-pill.configured:hover { border-color: #34d399; box-shadow: 0 0 16px var(--success-glow); }
+    .ai-status-pill.missing { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; animation: amberPulse 2.5s infinite ease-in-out; }
+    @keyframes amberPulse { 0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); } 50% { box-shadow: 0 0 14px rgba(245, 158, 11, 0.3); } }
+    .ai-sparkle { font-size: 0.95rem; }
+    .ai-badge { font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); font-weight: 700; text-transform: uppercase; }
+
+    /* AI Missing Banner */
+    .ai-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(56, 189, 248, 0.08) 100%); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: var(--radius-lg); padding: 16px 22px; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .ai-banner-content { display: flex; align-items: center; gap: 14px; }
+    .ai-banner-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #38bdf8); color: #000; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 14px rgba(245, 158, 11, 0.3); }
+    .ai-banner h4 { font-size: 0.92rem; font-weight: 700; color: #fbbf24; margin-bottom: 2px; }
+    .ai-banner p { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
+    .ai-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     /* Sidebar */
     .logo { padding: 0 24px 24px; display: flex; align-items: center; gap: 12px; }
-    .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 1.1rem; box-shadow: 0 0 16px var(--accent-glow); }
+    .logo-icon { width: 38px; height: 38px; border-radius: 12px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 1.15rem; box-shadow: 0 0 20px var(--accent-glow); }
     .logo h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
-    .logo span { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px; display: block; }
+    .logo span { font-size: 0.68rem; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px; display: block; }
     
-    .nav { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 12px; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; transition: all .15s; border: none; background: none; width: 100%; text-align: left; }
-    .nav-item:hover { color: var(--text); background: var(--bg-elevated); }
-    .nav-item.active { color: #fff; background: var(--bg-elevated); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .nav { flex: 1; display: flex; flex-direction: column; gap: 5px; padding: 0 12px; }
+    .nav-item { display: flex; align-items: center; gap: 11px; padding: 10px 14px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; transition: all .18s; border: 1px solid transparent; background: none; width: 100%; text-align: left; }
+    .nav-item:hover { color: var(--text); background: var(--bg-elevated); border-color: var(--border); }
+    .nav-item.active { color: #fff; background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(129, 140, 248, 0.12)); border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
     .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
     .nav-item.active svg { opacity: 1; stroke: var(--accent); }
     .nav-badge { margin-left: auto; background: rgba(255,255,255,0.06); color: var(--text-secondary); font-size: 0.7rem; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-    .nav-item.active .nav-badge { background: var(--border); color: var(--text); }
+    .nav-item.active .nav-badge { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
 
     .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .user-pill { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary); }
-    .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #38bdf8; color: #000; font-weight: 700; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
-    .btn-logout { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; cursor: pointer; transition: all .15s; }
-    .btn-logout:hover { color: var(--danger); border-color: var(--danger); }
+    .user-pill { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary); }
+    .user-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-gradient); color: #000; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; }
+    .btn-logout { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 5px 9px; border-radius: 8px; font-size: 0.72rem; cursor: pointer; transition: all .15s; font-weight: 500; }
+    .btn-logout:hover { color: var(--danger); border-color: var(--danger); background: rgba(244, 63, 94, 0.08); }
 
     /* Page Header */
-    .page-header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-    .page-header h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
+    .page-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .page-header h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.4px; }
     .page-header p { color: var(--text-secondary); font-size: 0.85rem; margin-top: 3px; }
 
     /* Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
-    .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); transition: all .2s; }
-    .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
-    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-card .label { font-size: 0.74rem; color: var(--text-secondary); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-    .stat-card.accent { border-left: 3px solid var(--accent); }
-    .stat-card.success { border-left: 3px solid var(--success); }
-    .stat-card.warning { border-left: 3px solid var(--warning); }
-    .stat-card.purple { border-left: 3px solid var(--purple); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: var(--radius-lg); padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow-card); transition: all .2s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: transparent; transition: background .2s; }
+    .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 26px rgba(0,0,0,0.6); }
+    .stat-card .value { font-size: 1.85rem; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: -0.5px; }
+    .stat-card .label { font-size: 0.74rem; color: var(--text-secondary); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+    .stat-card.accent::before { background: var(--accent); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.warning::before { background: var(--warning); }
+    .stat-card.purple::before { background: var(--purple); }
 
     /* Dashboard Sections */
     .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
-    .dash-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .dash-section { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-card); }
     .dash-section-full { grid-column: 1 / -1; }
     .dash-section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .dash-section-header h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .dash-section-header h3 { font-size: 0.92rem; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
     .dash-section-header .hint { font-size: 0.75rem; color: var(--text-muted); }
     .dash-section-body { padding: 16px 20px; }
 
-    /* Quick Stats Row */
-    .quick-stats { display: flex; gap: 24px; padding: 16px 20px; }
-    .quick-stat { flex: 1; }
-    .quick-stat .qs-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500; }
-    .quick-stat .qs-value { font-size: 1.15rem; font-weight: 700; }
+    /* Visual Trend SVG Chart */
+    .trends-chart-container { padding: 16px 20px 8px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.15); }
+    .chart-svg { width: 100%; height: 160px; overflow: visible; }
 
     /* Platform Breakdown */
     .platform-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
@@ -102,10 +139,10 @@
     /* Activity Item */
     .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
     .activity-item:last-child { border-bottom: none; }
-    .activity-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-    .activity-dot-published { background: #3fb950; }
-    .activity-dot-pending { background: #d29922; }
-    .activity-dot-failed { background: #f85149; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .activity-dot-published { background: #10b981; }
+    .activity-dot-pending { background: #f59e0b; }
+    .activity-dot-failed { background: #f43f5e; }
     .activity-dot-review { background: #818cf8; }
     .activity-dot-generating { background: #38bdf8; }
     .activity-dot-scheduled { background: #c084fc; }
@@ -116,11 +153,11 @@
 
     /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-    th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01); }
-    td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.015); }
+    td { padding: 13px 16px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tbody tr { transition: background .12s; }
-    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
 
     /* Badges */
     .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -128,37 +165,39 @@
     .badge-instagram { background: rgba(224,64,251,0.12); color: #e040fb; }
     .badge-youtube { background: rgba(255,0,0,0.12); color: #ff4d4d; }
     .badge-tiktok { background: rgba(0,242,234,0.12); color: #00f2ea; }
-    .badge-published { background: rgba(63,185,80,0.12); color: #3fb950; }
-    .badge-pending { background: rgba(210,153,34,0.12); color: #d29922; }
-    .badge-failed { background: rgba(248,81,73,0.12); color: #f85149; }
+    .badge-published { background: rgba(16,185,129,0.12); color: #10b981; }
+    .badge-pending { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .badge-failed { background: rgba(244,63,94,0.12); color: #f43f5e; }
     .badge-review { background: rgba(129,140,248,0.12); color: #818cf8; }
     .badge-generating { background: rgba(56,189,248,0.12); color: #38bdf8; }
     .badge-scheduled { background: rgba(192,132,252,0.12); color: #c084fc; }
     .badge-publishing { background: rgba(251,146,60,0.12); color: #fb923c; }
-    .badge-active { background: rgba(63,185,80,0.12); color: #3fb950; }
-    .badge-inactive { background: rgba(88,96,105,0.15); color: #8b949e; }
-    .badge-configured { background: rgba(63,185,80,0.12); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
-    .badge-missing { background: rgba(248,81,73,0.12); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+    .badge-active { background: rgba(16,185,129,0.12); color: #10b981; }
+    .badge-inactive { background: rgba(100,116,139,0.15); color: #94a3b8; }
+    .badge-configured { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-missing { background: rgba(244,63,94,0.12); color: #f43f5e; border: 1px solid rgba(244,63,94,0.3); }
 
     /* Buttons */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; }
-    .btn-primary { background: #fff; color: #000; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-    .btn-primary:hover { background: #e2e8f0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .16s ease; border: none; font-family: inherit; }
+    .btn-primary { background: #fff; color: #07090e; box-shadow: 0 1px 6px rgba(255,255,255,0.15); }
+    .btn-primary:hover { background: #e2e8f0; transform: translateY(-1px); }
+    .btn-accent { background: var(--accent-gradient); color: #000; font-weight: 700; box-shadow: 0 2px 10px var(--accent-glow); }
+    .btn-accent:hover { opacity: 0.95; transform: translateY(-1px); }
     .btn-secondary { background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover { background: var(--border); border-color: var(--border-hover); }
-    .btn-danger { background: rgba(248,81,73,0.1); color: var(--danger); border: 1px solid rgba(248,81,73,0.25); }
-    .btn-danger:hover { background: rgba(248,81,73,0.2); }
-    .btn-sm { padding: 5px 10px; font-size: 0.74rem; border-radius: 6px; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.06); border-color: var(--border-hover); }
+    .btn-danger { background: rgba(244,63,94,0.1); color: var(--danger); border: 1px solid rgba(244,63,94,0.25); }
+    .btn-danger:hover { background: rgba(244,63,94,0.2); }
+    .btn-sm { padding: 5px 11px; font-size: 0.74rem; border-radius: 7px; }
 
     /* Tabs */
     .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn .2s ease; }
+    .tab-content.active { display: block; animation: fadeIn .2s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Toolbar */
     .toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
-    .toolbar input, .toolbar select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: inherit; }
-    .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--accent); }
+    .toolbar input, .toolbar select, .toolbar-select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-family: inherit; }
+    .toolbar input:focus, .toolbar select:focus, .toolbar-select:focus { outline: none; border-color: var(--accent); }
 
     /* Filter Pills */
     .period-pills { display: flex; gap: 6px; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px solid var(--border); width: fit-content; }
@@ -168,32 +207,32 @@
 
     /* Cards Grid */
     .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
-    .card-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; transition: border-color .15s; }
-    .card-box:hover { border-color: var(--border-hover); }
+    .card-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; transition: all .15s; }
+    .card-box:hover { border-color: var(--border-hover); transform: translateY(-2px); }
     .card-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
     .card-box p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; }
 
     /* Settings Sections */
     .settings-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 900px; }
-    .settings-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
-    .settings-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .settings-card { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card); }
+    .settings-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
     .settings-card p.sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px; }
     .settings-field { margin-bottom: 18px; }
     .settings-field:last-child { margin-bottom: 0; }
     .settings-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.82rem; font-weight: 500; }
     .settings-input-wrap { position: relative; }
-    .settings-input-wrap input { width: 100%; padding: 10px 40px 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; font-family: inherit; }
+    .settings-input-wrap input { width: 100%; padding: 10px 42px 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; font-family: inherit; transition: border-color .15s; }
     .settings-input-wrap input:focus { outline: none; border-color: var(--accent); }
-    .settings-input-wrap .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+    .settings-input-wrap .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 0.9rem; }
     .settings-input-wrap .eye-btn:hover { color: var(--text); }
 
     /* Modal */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; justify-content: center; align-items: flex-start; padding-top: 40px; backdrop-filter: blur(6px); }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: flex-start; padding-top: 40px; backdrop-filter: blur(10px); }
     .modal-overlay.show { display: flex; animation: fadeIn .15s ease; }
-    .modal { background: var(--bg-elevated); border-radius: var(--radius-lg); border: 1px solid var(--border); width: 92%; max-width: 650px; max-height: 86vh; overflow-y: auto; }
+    .modal { background: #0f141d; border-radius: var(--radius-xl); border: 1px solid var(--border); width: 92%; max-width: 650px; max-height: 88vh; overflow-y: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 40px rgba(56,189,248,0.1); }
     .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .modal-header h3 { font-size: 1rem; font-weight: 600; }
-    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px; }
+    .modal-header h3 { font-size: 1.05rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 8px; }
     .modal-close:hover { color: var(--text); background: var(--bg-card); }
     .modal-body { padding: 24px; }
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
@@ -203,36 +242,61 @@
     .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
     .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-size: 0.85rem; font-family: inherit; transition: border-color .12s;
+      color: var(--text); font-size: 0.85rem; font-family: inherit; transition: border-color .15s;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
     .form-group textarea { min-height: 85px; resize: vertical; }
 
     /* Toast */
     .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
-    .toast { padding: 12px 20px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; animation: slideIn .2s ease; min-width: 260px; border: 1px solid; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .toast { padding: 12px 20px; border-radius: 10px; font-size: 0.82rem; font-weight: 500; animation: slideIn .2s ease; min-width: 270px; border: 1px solid; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
     .toast-success { background: #081d11; color: #4ade80; border-color: #14532d; }
     .toast-error { background: #220b0b; color: #f87171; border-color: #5c1d1d; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    /* Sign In Overlay */
-    .auth-overlay { position: fixed; inset: 0; background: rgba(5,7,12,0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(16px); }
-    .auth-card { width: 100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 36px 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(56,189,248,0.08); }
-    .auth-header { text-align: center; margin-bottom: 28px; }
-    .auth-logo { width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 14px; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.4rem; font-weight: 800; box-shadow: 0 0 24px var(--accent-glow); }
-    .auth-header h2 { font-size: 1.35rem; font-weight: 700; }
-    .auth-header p { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
-    .auth-error { background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 18px; display: none; }
+    /* SIGN IN OVERLAY (IMPROVED UI) */
+    .auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, rgba(30, 41, 59, 0.9) 0%, rgba(5, 7, 12, 0.98) 100%); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px); }
+    .auth-card { width: 100%; max-width: 440px; background: rgba(14, 18, 26, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 24px; padding: 38px 34px; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 50px rgba(56,189,248,0.12); position: relative; overflow: hidden; }
+    .auth-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-gradient); }
+    .auth-header { text-align: center; margin-bottom: 24px; }
+    .auth-logo { width: 52px; height: 52px; margin: 0 auto 16px; border-radius: 16px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.6rem; font-weight: 900; box-shadow: 0 0 30px var(--accent-glow); animation: logoFloat 4s ease-in-out infinite; }
+    @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .auth-header h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.4px; color: #fff; }
+    .auth-header p { font-size: 0.82rem; color: var(--text-secondary); margin-top: 5px; }
+
+    /* Credentials Quick Guide in Sign-in */
+    .auth-creds-hint { background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; }
+    .ach-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .ach-title { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-quick-fill { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .btn-quick-fill:hover { background: var(--accent); color: #000; }
+    .ach-details { font-size: 0.78rem; display: flex; flex-direction: column; gap: 4px; color: var(--text-secondary); }
+    .ach-details code { background: rgba(0,0,0,0.3); color: #fff; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 0.78rem; }
+    .ach-dim { color: var(--text-muted); font-size: 0.72rem; }
+
+    .input-with-icon { position: relative; }
+    .input-with-icon svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text-muted); }
+    .input-with-icon input { width: 100%; padding: 11px 40px 11px 38px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.88rem; font-family: inherit; transition: all .15s; }
+    .input-with-icon input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+    .input-with-icon .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 0.95rem; }
+    .input-with-icon .eye-btn:hover { color: var(--text); }
+
+    .auth-error { background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.35); color: #fda4af; padding: 11px 14px; border-radius: 10px; font-size: 0.82rem; margin-bottom: 18px; display: none; animation: shake .3s ease-in-out; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+    .auth-submit-btn { width: 100%; padding: 13px; font-size: 0.9rem; font-weight: 700; border-radius: 10px; background: var(--accent-gradient); color: #000; box-shadow: 0 4px 18px var(--accent-glow); margin-top: 14px; }
+    .auth-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px var(--accent-glow); }
 
     .loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem; }
     .empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem; }
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top: 2px solid var(--text); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar { display: none; }
-      .main { margin-left: 0; padding: 20px 16px; }
+      .main { margin-left: 0; padding: 16px 14px; }
+      .topbar { flex-direction: column; align-items: flex-start; }
       .dash-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -246,22 +310,43 @@
       <div class="auth-header">
         <div class="auth-logo">✦</div>
         <h2>Social Agent AI</h2>
-        <p>Admin Platform Sign In</p>
+        <p>Autonomous Multi-Platform Publishing & Analytics Engine</p>
       </div>
+
+      <!-- Credentials Quick Reference Guide -->
+      <div class="auth-creds-hint">
+        <div class="ach-header">
+          <div class="ach-title">
+            <span>🔑</span>
+            <span>Sign-In Credentials</span>
+          </div>
+          <button type="button" class="btn-quick-fill" onclick="quickFillDefaultCreds()">⚡ Auto-Fill Default</button>
+        </div>
+        <div class="ach-details">
+          <div><span class="ach-dim">Username:</span> <code>admin</code></div>
+          <div><span class="ach-dim">Password:</span> <code>(blank or DASHBOARD_PASSWORD)</code></div>
+        </div>
+      </div>
+
       <div class="auth-error" id="auth-error">Invalid username or password</div>
+
       <form id="auth-form" onsubmit="handleLogin(event)">
         <div class="form-group">
           <label>Username</label>
-          <input type="text" id="auth-username" required placeholder="admin" value="admin" autocomplete="username">
+          <div class="input-with-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="auth-username" required placeholder="admin" value="admin" autocomplete="username">
+          </div>
         </div>
         <div class="form-group">
           <label>Password</label>
-          <div class="settings-input-wrap">
-            <input type="password" id="auth-password" required placeholder="••••••••" autocomplete="current-password">
+          <div class="input-with-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" id="auth-password" placeholder="•••••••• (leave empty if not set)" autocomplete="current-password">
             <button type="button" class="eye-btn" onclick="togglePassVisibility('auth-password', this)">👁</button>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="width:100%;padding:12px;margin-top:10px">Sign In</button>
+        <button type="submit" class="btn btn-primary auth-submit-btn" id="auth-submit-btn">Sign In to Dashboard</button>
       </form>
     </div>
   </div>
@@ -317,16 +402,63 @@
     <!-- MAIN CONTENT -->
     <main class="main">
 
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="system-status-pill"><span class="pulse-dot"></span> System Live</span>
+          <span class="topbar-divider">/</span>
+          <span class="topbar-crumb" id="topbar-section-crumb">Overview Dashboard</span>
+        </div>
+        <div class="topbar-right">
+          <button class="ai-status-pill" id="topbar-ai-btn" onclick="openAiKeyModal()" title="Manage AI Key & Models">
+            <span class="ai-sparkle">✦</span>
+            <span id="topbar-ai-label">AI Engine: Checking...</span>
+            <span class="ai-badge" id="topbar-ai-badge">Manage</span>
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openGenerateModal()">+ Create Post</button>
+          <button class="btn btn-secondary btn-sm" onclick="handleLogout()" title="Sign Out of Social Agent" style="gap:6px;border-color:rgba(244,63,94,0.3);color:var(--text-secondary)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+
       <!-- DASHBOARD TAB -->
       <div class="tab-content active" id="tab-dashboard">
+        <!-- AI Alert Banner (when Gemini key is missing) -->
+        <div class="ai-banner" id="ai-banner-missing" style="display:none">
+          <div class="ai-banner-content">
+            <div class="ai-banner-icon">✦</div>
+            <div>
+              <h4>Google Gemini AI Key Required</h4>
+              <p>Connect your Gemini API key to enable autonomous text generation, auto-hashtags, and AI image generation.</p>
+            </div>
+          </div>
+          <div class="ai-banner-actions">
+            <button class="btn btn-accent btn-sm" onclick="openAiKeyModal()">🔑 Set Up AI Key</button>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">Get Free Key ↗</a>
+          </div>
+        </div>
+
         <div class="page-header">
           <div>
             <h2>Overview Dashboard</h2>
-            <p>Live metrics, autonomous automation queue, and channel performance</p>
+            <p>Live metrics, autonomous automation queue, and channel performance over time</p>
           </div>
-          <select id="dashboard-project-filter" onchange="loadDashboard()" class="toolbar-select">
-            <option value="">All Projects</option>
-          </select>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <select id="dashboard-period-filter" onchange="loadDashboard()" class="toolbar-select">
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d" selected>Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last 1 Year</option>
+              <option value="all">All Time</option>
+            </select>
+            <select id="dashboard-project-filter" onchange="loadDashboard()" class="toolbar-select">
+              <option value="">All Projects</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="openGenerateReportModal()">+ Generate Analysis Report</button>
+          </div>
         </div>
 
         <div class="stats-grid" id="stats">
@@ -381,7 +513,7 @@
           <div class="dash-section">
             <div class="dash-section-header">
               <h3>Platform Distribution</h3>
-              <span class="hint">Last 7 days activity</span>
+              <span class="hint" id="platform-period-hint">Activity</span>
             </div>
             <div class="dash-section-body" id="platform-breakdown">
               <div class="loading">Loading...</div>
@@ -396,6 +528,61 @@
             </div>
             <div class="dash-section-body" id="project-summary">
               <div class="loading">Loading...</div>
+            </div>
+          </div>
+
+          <!-- Performance Trends Over Time -->
+          <div class="dash-section dash-section-full">
+            <div class="dash-section-header">
+              <h3>Performance Trends Over Time</h3>
+              <span class="hint" id="trends-period-hint">Daily metrics timeline</span>
+            </div>
+            <div class="dash-section-body" style="padding:0">
+              <div id="trends-chart-container" class="trends-chart-container" style="display:none"></div>
+              <table>
+                <thead>
+                  <tr><th>Date</th><th>Posts Generated</th><th>Published</th><th>Failed</th><th>Likes</th><th>Impressions</th><th>Avg Engagement</th></tr>
+                </thead>
+                <tbody id="trends-table-body">
+                  <tr><td colspan="7" class="loading">Loading trends...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Stored Analysis Reports & Strategic Insights -->
+          <div class="dash-section dash-section-full">
+            <div class="dash-section-header">
+              <h3>Stored Analysis Reports & Strategic Insights</h3>
+              <span class="hint">Historical analysis records saved in PostgreSQL</span>
+            </div>
+            <div class="dash-section-body" style="padding:0">
+              <table>
+                <thead>
+                  <tr><th>Report Date</th><th>Period</th><th>Type</th><th>Total Posts</th><th>Total Likes</th><th>Total Impressions</th><th>Key Insight</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="stored-reports-table">
+                  <tr><td colspan="8" class="loading">Loading stored reports...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Strategy Optimization History -->
+          <div class="dash-section dash-section-full">
+            <div class="dash-section-header">
+              <h3>Strategy Optimization History</h3>
+              <span class="hint">Autonomous tuning logs over time</span>
+            </div>
+            <div class="dash-section-body" style="padding:0">
+              <table>
+                <thead>
+                  <tr><th>Optimized At</th><th>Account</th><th>Platform</th><th>Analyzed Posts</th><th>Changes Applied</th></tr>
+                </thead>
+                <tbody id="strategy-history-table">
+                  <tr><td colspan="5" class="loading">Loading strategy history...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -617,7 +804,10 @@
             <div class="settings-field">
               <div class="settings-label">
                 <span>Google Gemini API Key</span>
-                <span class="badge" id="badge-gemini">Checking...</span>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem;color:var(--accent);text-decoration:none;font-weight:600">Get Free Key ↗</a>
+                  <span class="badge" id="badge-gemini">Checking...</span>
+                </div>
               </div>
               <div class="settings-input-wrap">
                 <input type="password" id="cfg-GEMINI_API_KEY" placeholder="AIzaSy...">
@@ -643,7 +833,13 @@
               </div>
             </div>
 
-            <div class="settings-field" style="margin-top:14px">
+            <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-test-ai-settings" onclick="testAiConnection('settings')">⚡ Test Gemini Connection</button>
+              <button type="button" class="btn btn-accent btn-sm" onclick="saveAiKeyFromSettings()">💾 Save AI Key</button>
+              <span id="settings-ai-test-status" style="font-size:0.78rem;color:var(--text-secondary)"></span>
+            </div>
+
+            <div class="settings-field" style="margin-top:18px">
               <div class="settings-label">
                 <span>Pexels API Key (Stock Photo Fallback)</span>
                 <span class="badge" id="badge-pexels">Optional</span>
@@ -782,6 +978,77 @@
     </div>
   </div>
 
+  <!-- DEDICATED AI ENGINE & KEY MODAL -->
+  <div class="modal-overlay" id="modal-ai-overlay">
+    <div class="modal" style="max-width: 580px">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-gradient);color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;box-shadow:0 0 16px var(--accent-glow)">✦</div>
+          <div>
+            <h3 style="margin:0;font-size:1.05rem">Google Gemini AI Engine</h3>
+            <span style="font-size:0.75rem;color:var(--text-secondary)">Autonomous Content Generation & Reasoning</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeAiKeyModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);border-radius:12px;padding:14px;margin-bottom:18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px">Active AI Engine Status</span>
+            <span class="badge" id="modal-ai-status-badge">Checking...</span>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text-secondary);margin:0">
+            Powered by Google DeepMind's Gemini API. Enables autonomous multi-platform copywriting, trend hashtag suggestion, and high-resolution image generation.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label style="margin:0">Google Gemini API Key</label>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem;color:var(--accent);text-decoration:none;font-weight:600">Get Free Key at Google AI Studio ↗</a>
+          </div>
+          <div class="settings-input-wrap">
+            <input type="password" id="modal-ai-key-input" placeholder="AIzaSy... (Paste your key here)">
+            <button type="button" class="eye-btn" onclick="togglePassVisibility('modal-ai-key-input', this)">👁</button>
+          </div>
+          <span style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;display:block">
+            Stored securely in PostgreSQL and activated immediately without restarting the application.
+          </span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+          <div class="form-group">
+            <label>Text Model</label>
+            <select id="modal-ai-text-model">
+              <option value="gemini-2.5-flash">gemini-2.5-flash (Fast & recommended)</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro (Complex reasoning)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Image Model</label>
+            <select id="modal-ai-image-model">
+              <option value="imagen-4.0-generate-001">imagen-4.0-generate-001</option>
+              <option value="imagen-3.0-generate-002">imagen-3.0-generate-002</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Connection Test Box -->
+        <div id="modal-ai-test-box" style="margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);display:none">
+          <div id="modal-ai-test-msg" style="font-size:0.8rem"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-modal-test-ai" onclick="testAiConnection('modal')">⚡ Test Connection</button>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeAiKeyModal()">Cancel</button>
+          <button type="button" class="btn btn-accent btn-sm" id="btn-modal-save-ai" onclick="saveAiKeyFromModal()">💾 Save & Activate Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast-container" id="toast-container"></div>
 
@@ -898,12 +1165,23 @@
     }
 
     // ── Navigation ──
+    const tabTitles = {
+      dashboard: 'Overview Dashboard',
+      projects: 'Managed Projects',
+      accounts: 'Connected Accounts',
+      posts: 'Posts & Scheduled Drafts',
+      history: 'Data Store & Historical Snapshots',
+      settings: 'System Settings & API Keys',
+    };
+
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => {
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         item.classList.add('active');
         document.getElementById('tab-' + item.dataset.tab).classList.add('active');
+        const crumb = document.getElementById('topbar-section-crumb');
+        if (crumb) crumb.textContent = tabTitles[item.dataset.tab] || item.dataset.tab;
         const loader = {
           dashboard: loadDashboard,
           projects: loadProjects,
@@ -928,6 +1206,9 @@
     }
     document.getElementById('modal-overlay').addEventListener('click', e => {
       if (e.target === e.currentTarget) closeModal();
+    });
+    document.getElementById('modal-ai-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeAiKeyModal();
     });
 
     // ── API Helper ──
@@ -962,12 +1243,32 @@
     async function loadDashboard() {
       try {
         const pid = document.getElementById('dashboard-project-filter').value;
+        const period = document.getElementById('dashboard-period-filter')?.value || '7d';
         const qs = pid ? `?projectId=${pid}` : '';
-        const [stats, posts, analyticsSummary, accountPerf] = await Promise.all([
+        const analyticsQs = `?period=${period}${pid ? '&projectId=' + pid : ''}`;
+
+        const periodLabelMap = {
+          '24h': 'Last 24 Hours',
+          '7d': 'Last 7 Days',
+          '30d': 'Last 30 Days',
+          '90d': 'Last 90 Days',
+          '1y': 'Last 1 Year',
+          'all': 'All Time',
+        };
+        const periodText = periodLabelMap[period] || period;
+        const hintEl = document.getElementById('platform-period-hint');
+        if (hintEl) hintEl.textContent = `${periodText} activity`;
+        const trendsHintEl = document.getElementById('trends-period-hint');
+        if (trendsHintEl) trendsHintEl.textContent = `${periodText} daily metrics timeline`;
+
+        const [stats, posts, analyticsSummary, accountPerf, trendsData, reportsData, strategyHistory] = await Promise.all([
           api(`/api/dashboard/stats${qs}`),
           api(`/api/dashboard/recent-posts${qs}`),
-          api('/api/dashboard/analytics-summary'),
-          api('/api/dashboard/account-performance'),
+          api(`/api/dashboard/analytics-summary${analyticsQs}`),
+          api(`/api/dashboard/account-performance${analyticsQs}`),
+          api(`/api/dashboard/analytics-trends${analyticsQs}`).catch(() => ({ trends: [] })),
+          api(`/api/dashboard/reports?limit=10${pid ? '&projectId=' + pid : ''}`).catch(() => ({ reports: [] })),
+          api(`/api/dashboard/strategy-history`).catch(() => []),
         ]);
 
         document.getElementById('stat-total').textContent = stats.posts?.total ?? 0;
@@ -1013,6 +1314,62 @@
             </div>`).join('');
         }
 
+        // Performance Trends Over Time
+        const trendsBody = document.getElementById('trends-table-body');
+        const trendsList = trendsData.trends || [];
+        renderTrendsSvgChart(trendsList);
+        if (trendsList.length === 0) {
+          trendsBody.innerHTML = '<tr><td colspan="7" class="empty">No timeline data available for the selected period</td></tr>';
+        } else {
+          trendsBody.innerHTML = trendsList.map(t => `
+            <tr>
+              <td><strong>${t.date}</strong></td>
+              <td>${t.totalPosts}</td>
+              <td><span style="color:var(--success)">${t.publishedPosts}</span></td>
+              <td><span style="color:${t.failedPosts > 0 ? 'var(--danger)' : 'var(--text-muted)'}">${t.failedPosts}</span></td>
+              <td>${fmt(t.totalLikes)} ❤️</td>
+              <td>${fmt(t.totalImpressions)} 👁️</td>
+              <td><strong>${t.avgEngagementRate}%</strong></td>
+            </tr>`).join('');
+        }
+
+        // Stored Analysis Reports
+        const reportsBody = document.getElementById('stored-reports-table');
+        const reportsList = reportsData.reports || [];
+        if (reportsList.length === 0) {
+          reportsBody.innerHTML = '<tr><td colspan="8" class="empty">No historical analysis reports stored yet. Click "Generate Analysis Report" above to create one.</td></tr>';
+        } else {
+          reportsBody.innerHTML = reportsList.map(r => {
+            const firstInsight = (r.insights && r.insights.length > 0) ? r.insights[0].message : '-';
+            return `
+              <tr>
+                <td>${new Date(r.createdAt).toLocaleString()}</td>
+                <td><span class="badge" style="background:var(--bg-elevated);border:1px solid var(--border)">${esc(r.period)}</span></td>
+                <td><span class="badge badge-primary">${esc(r.reportType)}</span></td>
+                <td>${fmt(r.metrics?.totalPosts)}</td>
+                <td>${fmt(r.metrics?.totalLikes)} ❤️</td>
+                <td>${fmt(r.metrics?.totalImpressions)} 👁️</td>
+                <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:var(--text-secondary)">${esc(firstInsight)}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="viewStoredReport('${r.id}')">View Full Report</button></td>
+              </tr>`;
+          }).join('');
+        }
+
+        // Strategy Optimization History
+        const stratBody = document.getElementById('strategy-history-table');
+        if (!strategyHistory || strategyHistory.length === 0) {
+          stratBody.innerHTML = '<tr><td colspan="5" class="empty">No autonomous strategy optimization events recorded yet. Crons run weekly or when triggered.</td></tr>';
+        } else {
+          stratBody.innerHTML = strategyHistory.map(s => `
+            <tr>
+              <td style="font-size:0.75rem;color:var(--text-muted)">${new Date(s.createdAt).toLocaleString()}</td>
+              <td><strong>@${esc(s.accountUsername)}</strong></td>
+              <td><span class="badge badge-${s.platform}">${s.platform}</span></td>
+              <td>${s.postsAnalyzed} posts analyzed</td>
+              <td><div style="font-size:0.75rem;color:var(--accent)">${(s.changes || []).map(esc).join(', ') || 'No change'}</div></td>
+            </tr>`).join('');
+        }
+
         const perfBody = document.getElementById('account-perf-table');
         if (!accountPerf || accountPerf.length === 0) {
           perfBody.innerHTML = '<tr><td colspan="7" class="empty">No accounts linked yet</td></tr>';
@@ -1046,7 +1403,214 @@
               </div>`;
           }).join('');
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('loadDashboard error', err);
+      }
+    }
+
+    function openGenerateReportModal() {
+      const body = `
+        <div class="form-group">
+          <label>Target Project (Optional)</label>
+          <select id="gr-project">
+            <option value="">All Projects</option>
+            ${projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Analysis Time Window</label>
+          <select id="gr-period">
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d" selected>Last 7 Days (Standard Weekly)</option>
+            <option value="30d">Last 30 Days (Monthly Deep Dive)</option>
+            <option value="90d">Last 90 Days (Quarterly Review)</option>
+            <option value="1y">Last 1 Year (Annual Analysis)</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Report Classification</label>
+          <select id="gr-type">
+            <option value="weekly">Weekly Strategic Report</option>
+            <option value="daily">Daily Summary</option>
+            <option value="monthly">Monthly Audit</option>
+            <option value="custom">Custom On-Demand Analysis</option>
+          </select>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:10px">
+          The generated report will be permanently saved to the PostgreSQL database with all aggregated metric breakdowns, top posts, and rule-based insights.
+        </p>`;
+      const footer = `
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="gr-submit-btn" onclick="submitGenerateReport()">Run & Store Report</button>`;
+      openModal('Generate Analysis Report', body, footer);
+    }
+
+    async function submitGenerateReport() {
+      const btn = document.getElementById('gr-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+      try {
+        const projectId = document.getElementById('gr-project').value || undefined;
+        const period = document.getElementById('gr-period').value;
+        const reportType = document.getElementById('gr-type').value;
+
+        const report = await api('/api/dashboard/reports/generate', {
+          method: 'POST',
+          body: { projectId, period, reportType },
+        });
+
+        toast('Analysis report created and saved to database!');
+        closeModal();
+        loadDashboard();
+        if (report?.id) {
+          viewStoredReport(report.id);
+        }
+      } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Run & Store Report';
+      }
+    }
+
+    async function viewStoredReport(id) {
+      try {
+        const r = await api(`/api/dashboard/reports/${id}`);
+        const fmt = n => Number(n || 0).toLocaleString();
+        const m = r.metrics || {};
+
+        const insightsHtml = (r.insights && r.insights.length > 0)
+          ? `<div style="margin-top:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px">
+               <div style="font-size:0.75rem;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:8px">💡 Strategic Insights & Findings</div>
+               ${r.insights.map(i => `<div style="font-size:0.82rem;color:var(--text);margin-bottom:6px">• ${esc(i.message)}</div>`).join('')}
+             </div>`
+          : '';
+
+        const platformHtml = (r.platformBreakdown && r.platformBreakdown.length > 0)
+          ? `<div style="margin-top:16px">
+               <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Platform Performance</div>
+               <table>
+                 <thead><tr><th>Platform</th><th>Posts</th><th>Likes</th><th>Impressions</th></tr></thead>
+                 <tbody>
+                   ${r.platformBreakdown.map(p => `
+                     <tr>
+                       <td><span class="badge badge-${p.platform}">${p.platform}</span></td>
+                       <td>${p.postCount}</td>
+                       <td>${fmt(p.totalLikes)}</td>
+                       <td>${fmt(p.totalImpressions)}</td>
+                     </tr>`).join('')}
+                 </tbody>
+               </table>
+             </div>`
+          : '';
+
+        const topPostsHtml = (r.topPosts && r.topPosts.length > 0)
+          ? `<div style="margin-top:16px">
+               <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px">Top Performing Content</div>
+               <table>
+                 <thead><tr><th>Platform</th><th>Account</th><th>Content</th><th>Likes</th></tr></thead>
+                 <tbody>
+                   ${r.topPosts.map(p => `
+                     <tr>
+                       <td><span class="badge badge-${p.platform}">${p.platform}</span></td>
+                       <td>@${esc(p.username)}</td>
+                       <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem">${esc(p.text)}</td>
+                       <td><strong>${fmt(p.likes)} ❤️</strong></td>
+                     </tr>`).join('')}
+                 </tbody>
+               </table>
+             </div>`
+          : '';
+
+        const body = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div>
+              <span class="badge badge-primary">${esc(r.reportType || 'report')}</span>
+              <span class="badge" style="background:var(--bg-elevated);border:1px solid var(--border);margin-left:6px">${esc(r.period)}</span>
+            </div>
+            <span style="font-size:0.75rem;color:var(--text-muted)">Created: ${new Date(r.createdAt).toLocaleString()}</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+            <div><div style="font-size:0.7rem;color:var(--text-muted)">POSTS</div><div style="font-size:1.1rem;font-weight:700">${fmt(m.totalPosts)}</div></div>
+            <div><div style="font-size:0.7rem;color:var(--text-muted)">LIKES</div><div style="font-size:1.1rem;font-weight:700;color:var(--success)">${fmt(m.totalLikes)}</div></div>
+            <div><div style="font-size:0.7rem;color:var(--text-muted)">IMPRESSIONS</div><div style="font-size:1.1rem;font-weight:700;color:var(--accent)">${fmt(m.totalImpressions)}</div></div>
+            <div><div style="font-size:0.7rem;color:var(--text-muted)">ENGAGEMENT</div><div style="font-size:1.1rem;font-weight:700">${m.avgEngagementRate ?? 0}%</div></div>
+          </div>
+
+          ${insightsHtml}
+          ${platformHtml}
+          ${topPostsHtml}`;
+
+        const footer = `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
+        openModal('Historical Analysis Report', body, footer);
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    async function viewPostAnalyticsHistory(id) {
+      try {
+        const data = await api(`/api/posts/${id}/analytics-history`);
+        const post = data.post || {};
+        const history = data.history || [];
+        const growth = data.growth;
+        const fmt = n => Number(n || 0).toLocaleString();
+
+        let snapshotsHtml = '';
+        if (history.length === 0) {
+          snapshotsHtml = '<div class="empty">No periodic tracking snapshots recorded for this post yet. Snapshots are gathered every 6 hours.</div>';
+        } else {
+          snapshotsHtml = `
+            <div style="margin-top:14px;max-height:280px;overflow-y:auto">
+              <table>
+                <thead>
+                  <tr><th>Timestamp</th><th>Likes</th><th>Comments</th><th>Shares</th><th>Impressions</th><th>Reach</th><th>Engagement</th></tr>
+                </thead>
+                <tbody>
+                  ${history.map(h => `
+                    <tr>
+                      <td style="font-size:0.75rem;color:var(--text-muted)">${new Date(h.fetchedAt).toLocaleString()}</td>
+                      <td>${fmt(h.likes)}</td>
+                      <td>${fmt(h.comments)}</td>
+                      <td>${fmt(h.shares)}</td>
+                      <td>${fmt(h.impressions)}</td>
+                      <td>${fmt(h.reach)}</td>
+                      <td>${h.engagementRate.toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>`;
+        }
+
+        const body = `
+          <div style="margin-bottom:12px">
+            <span class="badge badge-${post.platform}">${post.platform}</span>
+            <div style="font-size:0.85rem;color:var(--text);margin-top:8px">${esc((post.text || '').substring(0, 140))}</div>
+          </div>
+          ${growth ? `
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--bg-card);padding:12px;border-radius:8px;border:1px solid var(--border)">
+            <div>
+              <div style="font-size:0.7rem;color:var(--text-muted)">LIKES GROWTH</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--success)">+${fmt(growth.likesGrowth)}</div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem;color:var(--text-muted)">IMP. GROWTH</div>
+              <div style="font-size:1.1rem;font-weight:700;color:var(--accent)">+${fmt(growth.impressionsGrowth)}</div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem;color:var(--text-muted)">SNAPSHOTS</div>
+              <div style="font-size:1.1rem;font-weight:700">${growth.snapshotsCount} captures</div>
+            </div>
+          </div>` : ''}
+          ${snapshotsHtml}`;
+
+        const footer = `<button class="btn btn-secondary" onclick="viewPost('${id}')">← Back to Post</button><button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
+        openModal('Post Engagement Over Time', body, footer);
+      } catch (err) {
+        toast(err.message, 'error');
+      }
     }
 
     function timeAgo(date) {
@@ -1129,7 +1693,7 @@
             ).join('')}
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div class="form-group">
             <label>Default Tone</label>
             <select id="pf-tone">
@@ -1144,6 +1708,19 @@
               ${['text','image','video','story','reel','short'].map(t =>
                 `<option value="${t}" ${cfg.defaultContentType===t?'selected':''}>${t}</option>`
               ).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Content Language</label>
+            <select id="pf-language">
+              <option value="en" ${(cfg.language||'en')==='en'?'selected':''}>English (Default)</option>
+              <option value="tr" ${cfg.language==='tr'?'selected':''}>Turkish</option>
+              <option value="es" ${cfg.language==='es'?'selected':''}>Spanish</option>
+              <option value="de" ${cfg.language==='de'?'selected':''}>German</option>
+              <option value="fr" ${cfg.language==='fr'?'selected':''}>French</option>
+              <option value="it" ${cfg.language==='it'?'selected':''}>Italian</option>
+              <option value="pt" ${cfg.language==='pt'?'selected':''}>Portuguese</option>
+              <option value="ar" ${cfg.language==='ar'?'selected':''}>Arabic</option>
             </select>
           </div>
         </div>
@@ -1169,6 +1746,7 @@
             platforms,
             defaultTone: document.getElementById('pf-tone').value,
             defaultContentType: document.getElementById('pf-contentType').value,
+            language: document.getElementById('pf-language').value || 'en',
             promptTemplate: document.getElementById('pf-prompt').value.trim(),
           },
         };
@@ -1362,6 +1940,7 @@
           </div>`;
         const footer = `
           ${['review','scheduled'].includes(post.status) ? `<button class="btn btn-primary" style="background:#16a34a" onclick="publishPost('${id}','${post.platform}')">Publish Now</button>` : ''}
+          <button class="btn btn-secondary" onclick="viewPostAnalyticsHistory('${id}')">📈 Engagement Over Time</button>
           <button class="btn btn-secondary" onclick="savePost('${id}')">Save Changes</button>
           <button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
         openModal('Post Details', body, footer);
@@ -1426,15 +2005,30 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label>Content Format</label>
-          <select id="gf-contentType">
-            <option value="text">Standard Text Post</option>
-            <option value="image">Image + Text Post</option>
-            <option value="video">Full AI Video (Ken Burns + TTS)</option>
-            <option value="reel">Instagram Reel</option>
-            <option value="short">YouTube Short</option>
-          </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>Content Format</label>
+            <select id="gf-contentType">
+              <option value="text">Standard Text Post</option>
+              <option value="image">Image + Text Post</option>
+              <option value="video">Full AI Video (Ken Burns + TTS)</option>
+              <option value="reel">Instagram Reel</option>
+              <option value="short">YouTube Short</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Language</label>
+            <select id="gf-language">
+              <option value="en" selected>English (Default)</option>
+              <option value="tr">Turkish</option>
+              <option value="es">Spanish</option>
+              <option value="de">German</option>
+              <option value="fr">French</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label>Topic / Prompt</label>
@@ -1459,6 +2053,7 @@
         const cfg = JSON.parse(opt.dataset.config || '{}');
         if (cfg.defaultTone) document.getElementById('gf-tone').value = cfg.defaultTone;
         if (cfg.defaultContentType) document.getElementById('gf-contentType').value = cfg.defaultContentType;
+        if (cfg.language) document.getElementById('gf-language').value = cfg.language;
         if (cfg.promptTemplate) document.getElementById('gf-prompt').value = cfg.promptTemplate;
         if (cfg.platforms?.length) document.getElementById('gf-platform').value = cfg.platforms[0];
       } catch {}
@@ -1480,6 +2075,7 @@
           platform: document.getElementById('gf-platform').value,
           tone: document.getElementById('gf-tone').value,
           contentType: ct,
+          language: document.getElementById('gf-language')?.value || 'en',
           prompt,
         };
         const resp = await fetch('/api/posts/generate', {
@@ -1602,7 +2198,9 @@
           <div><div style="font-size:0.7rem;color:var(--text-muted)">SHARES</div><div style="font-weight:700">${p.shares || 0}</div></div>
           <div><div style="font-size:0.7rem;color:var(--text-muted)">IMPRESSIONS</div><div style="font-weight:700">${p.impressions || 0}</div></div>
         </div>`;
-      const footer = `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
+      const footer = `
+        <button class="btn btn-secondary" onclick="viewPostAnalyticsHistory('${p.id}')">📈 Engagement Over Time</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
       openModal('Post Database Record', body, footer);
     }
 
@@ -1641,9 +2239,12 @@
     }
 
     // ── SETTINGS & API KEYS ──
+    let systemSettingsCache = {};
+
     async function loadSettings() {
       try {
         const data = await api('/api/settings');
+        systemSettingsCache = data;
         for (const [key, item] of Object.entries(data)) {
           const input = document.getElementById(`cfg-${key}`);
           if (input) {
@@ -1669,6 +2270,8 @@
           pexelsBadge.className = data.PEXELS_API_KEY?.isSet ? 'badge badge-configured' : 'badge badge-inactive';
           pexelsBadge.textContent = data.PEXELS_API_KEY?.isSet ? 'Configured' : 'Optional';
         }
+
+        checkAiStatus();
       } catch (err) { toast(err.message, 'error'); }
     }
 
@@ -1712,7 +2315,308 @@
         await api('/api/settings', { method: 'POST', body: { settings: payload } });
         toast('All settings saved to database successfully!');
         loadSettings();
+        checkAiStatus();
       } catch (err) { toast(err.message, 'error'); }
+    }
+
+    // ── AI Engine Management ──
+    async function checkAiStatus() {
+      try {
+        const data = await api('/api/settings');
+        systemSettingsCache = data;
+
+        const isConfigured = Boolean(data.GEMINI_API_KEY?.isSet);
+        const modelName = data.GEMINI_MODEL?.value || 'gemini-2.5-flash';
+
+        const btn = document.getElementById('topbar-ai-btn');
+        const lbl = document.getElementById('topbar-ai-label');
+        const badge = document.getElementById('topbar-ai-badge');
+        const banner = document.getElementById('ai-banner-missing');
+
+        if (btn && lbl && badge) {
+          if (isConfigured) {
+            btn.className = 'ai-status-pill configured';
+            lbl.textContent = `AI: ${modelName}`;
+            badge.textContent = 'Active';
+          } else {
+            btn.className = 'ai-status-pill missing';
+            lbl.textContent = 'AI Key Needed';
+            badge.textContent = 'Set Key';
+          }
+        }
+
+        if (banner) {
+          banner.style.display = isConfigured ? 'none' : 'flex';
+        }
+
+        const geminiBadge = document.getElementById('badge-gemini');
+        if (geminiBadge) {
+          geminiBadge.className = isConfigured ? 'badge badge-configured' : 'badge badge-missing';
+          geminiBadge.textContent = isConfigured ? 'Configured' : 'Missing Key';
+        }
+      } catch (err) {
+        console.warn('AI status check error:', err);
+      }
+    }
+
+    async function openAiKeyModal() {
+      try {
+        const data = await api('/api/settings');
+        systemSettingsCache = data;
+
+        const keyInput = document.getElementById('modal-ai-key-input');
+        if (keyInput) {
+          keyInput.value = data.GEMINI_API_KEY?.isSet ? data.GEMINI_API_KEY.masked : '';
+        }
+
+        const textModelSel = document.getElementById('modal-ai-text-model');
+        if (textModelSel && data.GEMINI_MODEL?.value) {
+          textModelSel.value = data.GEMINI_MODEL.value;
+        }
+
+        const imageModelSel = document.getElementById('modal-ai-image-model');
+        if (imageModelSel && data.GEMINI_IMAGE_MODEL?.value) {
+          imageModelSel.value = data.GEMINI_IMAGE_MODEL.value;
+        }
+
+        const badge = document.getElementById('modal-ai-status-badge');
+        if (badge) {
+          badge.className = data.GEMINI_API_KEY?.isSet ? 'badge badge-configured' : 'badge badge-missing';
+          badge.textContent = data.GEMINI_API_KEY?.isSet ? 'Configured' : 'Key Missing';
+        }
+
+        const testBox = document.getElementById('modal-ai-test-box');
+        if (testBox) testBox.style.display = 'none';
+
+        document.getElementById('modal-ai-overlay').classList.add('show');
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    function closeAiKeyModal() {
+      document.getElementById('modal-ai-overlay').classList.remove('show');
+    }
+
+    async function testAiConnection(source = 'modal') {
+      const isModal = source === 'modal';
+      const keyEl = isModal ? document.getElementById('modal-ai-key-input') : document.getElementById('cfg-GEMINI_API_KEY');
+      const modelEl = isModal ? document.getElementById('modal-ai-text-model') : document.getElementById('cfg-GEMINI_MODEL');
+      const btn = isModal ? document.getElementById('btn-modal-test-ai') : document.getElementById('btn-test-ai-settings');
+      const testBox = isModal ? document.getElementById('modal-ai-test-box') : null;
+      const testMsg = isModal ? document.getElementById('modal-ai-test-msg') : document.getElementById('settings-ai-test-status');
+
+      let apiKey = keyEl ? keyEl.value.trim() : '';
+      if (apiKey.includes('...')) {
+        apiKey = ''; // test with stored key
+      }
+
+      const model = modelEl ? modelEl.value : 'gemini-2.5-flash';
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Testing...';
+      }
+
+      if (testBox) {
+        testBox.style.display = 'block';
+        testBox.style.background = 'rgba(56, 189, 248, 0.08)';
+        testBox.style.borderColor = 'rgba(56, 189, 248, 0.3)';
+        testMsg.innerHTML = '<span style="color:var(--accent)">Contacting Google Gemini API...</span>';
+      } else if (testMsg) {
+        testMsg.innerHTML = '<span style="color:var(--accent)">Testing connection...</span>';
+      }
+
+      try {
+        const res = await api('/api/settings/test-ai', {
+          method: 'POST',
+          body: { apiKey, model }
+        });
+
+        const successHtml = `<span style="color:var(--success);font-weight:700">✓ Connected!</span> Latency: <strong>${res.latencyMs}ms</strong> | Model: <strong>${esc(res.model)}</strong>`;
+        if (testBox) {
+          testBox.style.background = 'rgba(16, 185, 129, 0.1)';
+          testBox.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+          testMsg.innerHTML = successHtml;
+        } else if (testMsg) {
+          testMsg.innerHTML = successHtml;
+        }
+        toast('Gemini API connection verified successfully!');
+      } catch (err) {
+        const errorHtml = `<span style="color:var(--danger);font-weight:700">✕ Verification Failed:</span> ${esc(err.message)}`;
+        if (testBox) {
+          testBox.style.background = 'rgba(244, 63, 94, 0.1)';
+          testBox.style.borderColor = 'rgba(244, 63, 94, 0.35)';
+          testMsg.innerHTML = errorHtml;
+        } else if (testMsg) {
+          testMsg.innerHTML = errorHtml;
+        }
+        toast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = isModal ? '⚡ Test Connection' : '⚡ Test Gemini Connection';
+        }
+      }
+    }
+
+    async function saveAiKeyFromModal() {
+      const keyInput = document.getElementById('modal-ai-key-input');
+      const textModelSel = document.getElementById('modal-ai-text-model');
+      const imageModelSel = document.getElementById('modal-ai-image-model');
+      const btn = document.getElementById('btn-modal-save-ai');
+
+      let apiKey = keyInput ? keyInput.value.trim() : '';
+      if (apiKey.includes('...')) {
+        apiKey = systemSettingsCache.GEMINI_API_KEY?.value || '';
+      }
+
+      if (!apiKey) {
+        toast('Please enter your Google Gemini API key', 'error');
+        keyInput.focus();
+        return;
+      }
+
+      const model = textModelSel ? textModelSel.value : 'gemini-2.5-flash';
+      const imageModel = imageModelSel ? imageModelSel.value : 'imagen-4.0-generate-001';
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+      try {
+        await api('/api/settings/ai-key', {
+          method: 'POST',
+          body: { apiKey, model, imageModel },
+        });
+
+        toast('Gemini AI key & models saved and activated!');
+        closeAiKeyModal();
+        await checkAiStatus();
+        if (document.getElementById('tab-settings').classList.contains('active')) {
+          loadSettings();
+        }
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 Save & Activate Key';
+      }
+    }
+
+    async function saveAiKeyFromSettings() {
+      const keyInput = document.getElementById('cfg-GEMINI_API_KEY');
+      const textModel = document.getElementById('cfg-GEMINI_MODEL')?.value;
+      const imageModel = document.getElementById('cfg-GEMINI_IMAGE_MODEL')?.value;
+
+      let apiKey = keyInput ? keyInput.value.trim() : '';
+      if (apiKey.includes('...')) {
+        apiKey = systemSettingsCache.GEMINI_API_KEY?.value || '';
+      }
+
+      if (!apiKey) {
+        toast('Please enter your Google Gemini API key', 'error');
+        keyInput.focus();
+        return;
+      }
+
+      try {
+        await api('/api/settings/ai-key', {
+          method: 'POST',
+          body: { apiKey, model: textModel, imageModel },
+        });
+        toast('Gemini AI configuration saved successfully!');
+        await checkAiStatus();
+        loadSettings();
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    }
+
+    // ── Credential Helper ──
+    function quickFillDefaultCreds() {
+      const u = document.getElementById('auth-username');
+      const p = document.getElementById('auth-password');
+      if (u) u.value = 'admin';
+      if (p) {
+        p.value = '';
+        p.focus();
+      }
+      toast('Filled default username: admin (leave password blank if default)');
+    }
+
+    // ── SVG Trend Chart Visualizer ──
+    function renderTrendsSvgChart(trends) {
+      const container = document.getElementById('trends-chart-container');
+      if (!container) return;
+      if (!trends || trends.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+
+      const w = 760;
+      const h = 135;
+      const padL = 40;
+      const padR = 20;
+      const padT = 15;
+      const padB = 25;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      const maxImp = Math.max(...trends.map(t => Math.max(t.totalImpressions || 0, t.totalLikes || 0, 10)));
+      const maxPosts = Math.max(...trends.map(t => t.totalPosts || 0), 5);
+
+      const n = trends.length;
+      const barW = Math.max(6, Math.min(24, Math.floor((plotW / n) * 0.45)));
+
+      const likesPoints = [];
+      const impPoints = [];
+      const bars = [];
+      const xLabels = [];
+
+      trends.forEach((t, i) => {
+        const x = padL + (i + 0.5) * (plotW / n);
+
+        const postH = Math.round(((t.publishedPosts || 0) / maxPosts) * plotH);
+        const barY = padT + plotH - postH;
+        bars.push(`<rect x="${x - barW/2}" y="${barY}" width="${barW}" height="${postH}" rx="3" fill="rgba(56, 189, 248, 0.35)" stroke="#38bdf8" stroke-width="1"><title>${esc(t.date)}: ${t.publishedPosts} published / ${t.totalPosts} total</title></rect>`);
+
+        const likeY = Math.round(padT + plotH - (((t.totalLikes || 0) / maxImp) * plotH));
+        likesPoints.push(`${x},${likeY}`);
+
+        const impY = Math.round(padT + plotH - (((t.totalImpressions || 0) / maxImp) * plotH));
+        impPoints.push(`${x},${impY}`);
+
+        if (n <= 10 || i % Math.ceil(n / 8) === 0 || i === n - 1) {
+          const shortDate = t.date.length > 5 ? t.date.slice(5) : t.date;
+          xLabels.push(`<text x="${x}" y="${h - 6}" font-size="10" fill="#64748b" text-anchor="middle">${shortDate}</text>`);
+        }
+      });
+
+      const likesPolyline = likesPoints.join(' ');
+      const impPolyline = impPoints.join(' ');
+
+      container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Visual Progression</div>
+          <div style="display:flex;gap:16px;font-size:0.72rem">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(56,189,248,0.35);border:1px solid #38bdf8"></span> Posts</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#f43f5e"></span> Likes</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#a855f7"></span> Impressions</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 ${w} ${h}" class="chart-svg">
+          <line x1="${padL}" y1="${padT + plotH}" x2="${w - padR}" y2="${padT + plotH}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <line x1="${padL}" y1="${padT}" x2="${w - padR}" y2="${padT}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3 3"/>
+          <line x1="${padL}" y1="${padT + plotH/2}" x2="${w - padR}" y2="${padT + plotH/2}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3 3"/>
+          ${bars.join('')}
+          <polyline fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${impPolyline}"/>
+          <polyline fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${likesPolyline}"/>
+          ${likesPoints.map(p => `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="3" fill="#f43f5e" stroke="#07090e" stroke-width="1.5"/>`).join('')}
+          ${xLabels.join('')}
+        </svg>
+      `;
     }
 
     // ── Helpers ──
@@ -1724,7 +2628,10 @@
 
     // ── Init ──
     async function initApp() {
-      await loadProjects();
+      await Promise.all([
+        loadProjects(),
+        checkAiStatus(),
+      ]);
       loadDashboard();
     }
 
