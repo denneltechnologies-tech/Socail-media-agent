@@ -6,9 +6,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-bot}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bot}
       POSTGRES_DB: social_media_bot
-    # Only reachable from this machine — remove the binding entirely if you don't need host access
-    ports:
-      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,6 +13,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - default
 
   app:
     build: .
@@ -24,8 +23,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${PORT:-3000}:3000"
-    # All settings come from .env; the values below override it for the container network
+      - "${PORT:-3050}:3000"
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-bot}:${POSTGRES_PASSWORD:-bot}@db:5432/social_media_bot
@@ -36,9 +34,16 @@ services:
       - whatsapp_session:/app/.wwebjs_auth
       - temp_data:/app/temp
       - public_data:/app/public
+    networks:
+      - default
+      - dokploy-network
 
 volumes:
   pgdata:
   whatsapp_session:
   temp_data:
   public_data:
+
+networks:
+  dokploy-network:
+    external: true
