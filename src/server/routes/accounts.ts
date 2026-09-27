@@ -82,21 +82,38 @@ accountsRouter.post('/', asyncHandler(async (req, res) => {
   res.status(201).json(sanitize(account!));
 }));
 
-accountsRouter.patch('/:id', asyncHandler(async (req, res) => {
+const updateAccountHandler = asyncHandler(async (req, res) => {
   const id = req.params['id'] as string;
   const updates = parseBody(updateAccountSchema, req, res);
   if (!updates) return;
 
+  const setValues: Record<string, unknown> = {
+    ...(updates.projectId ? { projectId: updates.projectId } : {}),
+    ...(updates.active !== undefined ? { active: updates.active } : {}),
+    ...(updates.role ? { role: updates.role } : {}),
+    ...(updates.username ? { username: updates.username } : {}),
+    ...(updates.platform ? { platform: updates.platform } : {}),
+    ...(updates.credentials ? { credentials: updates.credentials } : {}),
+    ...(updates.strategy !== undefined ? { strategy: updates.strategy as AccountStrategy | null } : {}),
+  };
+
+  if (Object.keys(setValues).length === 0) {
+    const [existing] = await db
+      .select()
+      .from(schema.accounts)
+      .where(eq(schema.accounts.id, id))
+      .limit(1);
+    if (!existing) {
+      res.status(404).json({ error: 'Account not found' });
+      return;
+    }
+    res.json(sanitize(existing));
+    return;
+  }
+
   const [updated] = await db
     .update(schema.accounts)
-    .set({
-      ...(updates.active !== undefined ? { active: updates.active } : {}),
-      ...(updates.role ? { role: updates.role } : {}),
-      ...(updates.username ? { username: updates.username } : {}),
-      ...(updates.platform ? { platform: updates.platform } : {}),
-      ...(updates.credentials ? { credentials: updates.credentials } : {}),
-      ...(updates.strategy !== undefined ? { strategy: updates.strategy as AccountStrategy | null } : {}),
-    })
+    .set(setValues)
     .where(eq(schema.accounts.id, id))
     .returning();
 
@@ -107,7 +124,10 @@ accountsRouter.patch('/:id', asyncHandler(async (req, res) => {
 
   await afterAccountChange(id);
   res.json(sanitize(updated));
-}));
+});
+
+accountsRouter.patch('/:id', updateAccountHandler);
+accountsRouter.put('/:id', updateAccountHandler);
 
 accountsRouter.delete('/:id', asyncHandler(async (req, res) => {
   const id = req.params['id'] as string;

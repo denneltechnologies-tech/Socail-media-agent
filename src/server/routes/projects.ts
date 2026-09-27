@@ -115,7 +115,7 @@ projectsRouter.get('/:id', asyncHandler(async (req, res) => {
   res.json(project);
 }));
 
-projectsRouter.patch('/:id', asyncHandler(async (req, res) => {
+const updateProjectHandler = asyncHandler(async (req, res) => {
   const id = req.params['id'] as string;
   const body = parseBody(updateProjectSchema, req, res);
   if (!body) return;
@@ -153,7 +153,10 @@ projectsRouter.patch('/:id', asyncHandler(async (req, res) => {
     .returning();
 
   res.json(updated);
-}));
+});
+
+projectsRouter.patch('/:id', updateProjectHandler);
+projectsRouter.put('/:id', updateProjectHandler);
 
 projectsRouter.post('/:id/logo', logoUpload.single('logo'), asyncHandler(async (req, res) => {
   const id = req.params['id'] as string;

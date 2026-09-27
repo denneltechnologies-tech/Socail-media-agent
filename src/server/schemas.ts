@@ -11,6 +11,16 @@ export const postStatusSchema = z.nativeEnum(PostStatus);
 const uuid = z.string().uuid();
 const percent = z.coerce.number().min(0).max(100);
 
+function cleanUsername(val: string): string {
+  let cleaned = val.trim().replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(cleaned)) {
+    const parts = cleaned.split('/').filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) cleaned = last;
+  }
+  return cleaned.replace(/^@+/, '');
+}
+
 export const strategySchema = z
   .object({
     active: z.boolean().default(false),
@@ -22,6 +32,7 @@ export const strategySchema = z
       .trim()
       .refine(isValidCron, { message: 'Invalid cron expression' })
       .default('0 */4 * * *'),
+    postingSchedule: z.string().optional(),
     contentMix: z
       .object({ original: percent, repost: percent, reply: percent })
       .default({ original: 100, repost: 0, reply: 0 }),
@@ -49,16 +60,17 @@ export const createAccountSchema = z.object({
   projectId: uuid,
   platform: platformSchema,
   role: roleSchema.optional(),
-  username: z.string().trim().min(1).max(100),
+  username: z.string().trim().min(1).max(100).transform(cleanUsername),
   credentials: credentialsSchema.default({}),
   strategy: strategySchema.nullable().optional(),
   active: z.boolean().optional(),
 });
 
 export const updateAccountSchema = z.object({
+  projectId: uuid.optional(),
   active: z.boolean().optional(),
   role: roleSchema.optional(),
-  username: z.string().trim().min(1).max(100).optional(),
+  username: z.string().trim().min(1).max(100).transform(cleanUsername).optional(),
   platform: platformSchema.optional(),
   credentials: credentialsSchema.optional(),
   strategy: strategySchema.nullable().optional(),

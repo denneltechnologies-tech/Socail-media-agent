@@ -1672,7 +1672,8 @@
     }
 
     function openProjectModal(id) {
-      const p = id ? projects.find(x => x.id === id) : null;
+      const isEdit = Boolean(id && id !== 'undefined' && id !== 'null');
+      const p = isEdit ? projects.find(x => x.id === id) : null;
       const cfg = p?.config || {};
       const body = `
         <div class="form-group">
@@ -1728,12 +1729,13 @@
         </div>`;
       const footer = `
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveProject('${id || ''}')">Save</button>`;
-      openModal(id ? 'Edit Project' : 'New Project', body, footer);
+        <button class="btn btn-primary" onclick="saveProject('${isEdit ? id : ''}')">Save</button>`;
+      openModal(isEdit ? 'Edit Project' : 'New Project', body, footer);
     }
 
     async function saveProject(id) {
       try {
+        const isEdit = Boolean(id && id !== 'undefined' && id !== 'null' && id !== '');
         const name = document.getElementById('pf-name').value.trim();
         if (!name) { toast('Project name is required', 'error'); return; }
         const platforms = Array.from(document.querySelectorAll('input[name="pf-platform"]:checked')).map(cb => cb.value);
@@ -1748,7 +1750,7 @@
             promptTemplate: document.getElementById('pf-prompt').value.trim(),
           },
         };
-        if (id) {
+        if (isEdit) {
           await api(`/api/projects/${id}`, { method: 'PUT', body: payload });
           toast('Project updated');
         } else {
@@ -1770,6 +1772,7 @@
     }
 
     // ── Accounts ──
+    let accountsCache = [];
     async function loadAccounts() {
       try {
         const params = new URLSearchParams();
@@ -1778,6 +1781,7 @@
         if (pid) params.set('projectId', pid);
         if (plat) params.set('platform', plat);
         const accounts = await api(`/api/accounts?${params}`);
+        accountsCache = accounts;
         document.getElementById('nav-accounts-count').textContent = accounts.length;
         const tbody = document.getElementById('accounts-table');
         if (accounts.length === 0) {
@@ -1788,9 +1792,9 @@
           <tr>
             <td><strong>@${esc(a.username)}</strong></td>
             <td><span class="badge badge-${a.platform}">${a.platform}</span></td>
-            <td>${a.role}</td>
+            <td>${esc(a.role || 'creator')}</td>
             <td>${esc(projectsMap[a.projectId] || '-')}</td>
-            <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.postingSchedule || 'Manual')}</td>
+            <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual')}</td>
             <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
             <td>
               <button class="btn btn-secondary btn-sm" onclick="openAccountModal('${a.id}')">Edit</button>
@@ -1802,57 +1806,85 @@
 
     function openAccountModal(id) {
       if (projects.length === 0) { toast('Please create a project first', 'error'); return; }
+      const isEdit = Boolean(id && id !== 'undefined' && id !== 'null');
+      const acc = isEdit ? accountsCache.find(a => a.id === id) : null;
+      const currUsername = acc ? acc.username : '';
+      const currPlatform = acc ? acc.platform : 'instagram';
+      const currProject = acc ? acc.projectId : (projects[0]?.id || '');
+      const currSchedule = acc?.strategy?.cronExpression || acc?.strategy?.postingSchedule || '0 */4 * * *';
+      const currPrompt = acc?.strategy?.promptTemplate || 'Engaging and valuable content sharing updates, tips, and insights for our audience.';
+
       const body = `
         <div class="form-group">
           <label>Project</label>
           <select id="af-project">
-            ${projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+            ${projects.map(p => `<option value="${p.id}" ${p.id === currProject ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
           <label>Platform</label>
           <select id="af-platform">
-            <option value="twitter">Twitter / X</option>
-            <option value="instagram">Instagram</option>
-            <option value="youtube">YouTube</option>
-            <option value="tiktok">TikTok</option>
+            <option value="instagram" ${currPlatform === 'instagram' ? 'selected' : ''}>Instagram</option>
+            <option value="twitter" ${currPlatform === 'twitter' ? 'selected' : ''}>Twitter / X</option>
+            <option value="youtube" ${currPlatform === 'youtube' ? 'selected' : ''}>YouTube</option>
+            <option value="tiktok" ${currPlatform === 'tiktok' ? 'selected' : ''}>TikTok</option>
           </select>
         </div>
         <div class="form-group">
           <label>Account Handle / Username</label>
-          <input id="af-username" placeholder="e.g. brand_official">
+          <input id="af-username" placeholder="e.g. brand_official or https://instagram.com/brand_official" value="${esc(currUsername)}">
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Paste your handle (@username) or full profile URL</div>
+        </div>
+        <div class="form-group">
+          <label>Content Theme & Prompt Strategy</label>
+          <textarea id="af-prompt" rows="2" placeholder="e.g. Travel destinations, flight deals, vacation itineraries, and tips">${esc(currPrompt)}</textarea>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Defines the topics and creative direction for automated posts</div>
         </div>
         <div class="form-group">
           <label>Schedule Cron Expression</label>
-          <input id="af-schedule" placeholder="0 */4 * * * (Every 4 hours)" value="0 */4 * * *">
+          <input id="af-schedule" placeholder="0 */4 * * * (Every 4 hours)" value="${esc(currSchedule)}">
         </div>`;
       const footer = `
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveAccount('${id || ''}')">Save</button>`;
-      openModal(id ? 'Edit Account' : 'Link Social Account', body, footer);
+        <button class="btn btn-primary" onclick="saveAccount('${isEdit ? id : ''}')">Save</button>`;
+      openModal(isEdit ? 'Edit Account' : 'Link Social Account', body, footer);
     }
 
     async function saveAccount(id) {
       try {
-        const username = document.getElementById('af-username').value.trim();
-        if (!username) { toast('Username is required', 'error'); return; }
+        const isEdit = Boolean(id && id !== 'undefined' && id !== 'null' && id !== '');
+        let rawUsername = document.getElementById('af-username').value.trim();
+        if (!rawUsername) { toast('Username or profile URL is required', 'error'); return; }
+
+        // Clean full URL or @ prefix to get pure username
+        let clean = rawUsername.replace(/\/+$/, '');
+        if (/^https?:\/\//i.test(clean)) {
+          const parts = clean.split('/').filter(Boolean);
+          clean = parts[parts.length - 1] || clean;
+        }
+        clean = clean.replace(/^@+/, '');
+
+        const cron = document.getElementById('af-schedule').value.trim() || '0 */4 * * *';
+        const promptTemplate = document.getElementById('af-prompt')?.value?.trim() || 'Engaging and valuable content for our audience.';
+
         const payload = {
           projectId: document.getElementById('af-project').value,
           platform: document.getElementById('af-platform').value,
-          username,
+          username: clean,
           credentials: {},
           strategy: {
             active: true,
-            postingSchedule: document.getElementById('af-schedule').value.trim() || '0 */4 * * *',
+            cronExpression: cron,
+            promptTemplate,
             contentMix: { original: 80, repost: 15, reply: 5 },
           },
         };
-        if (id) {
+        if (isEdit) {
           await api(`/api/accounts/${id}`, { method: 'PUT', body: payload });
-          toast('Account updated');
+          toast('Account updated successfully');
         } else {
           await api('/api/accounts', { method: 'POST', body: payload });
-          toast('Account linked');
+          toast('Account linked successfully');
         }
         closeModal();
         loadAccounts();

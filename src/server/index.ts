@@ -66,11 +66,14 @@ export function createServer(): express.Express {
   app.use('/api/twitter', twitterAuthRouter);
 
   app.get('/', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
   });
 
-
-  app.use('/api', (_req, res) => {
+  app.use('/api', (req, res) => {
+    logger.warn(`API route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({ error: 'Not found' });
   });
 
