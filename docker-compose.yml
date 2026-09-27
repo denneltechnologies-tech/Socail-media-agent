@@ -23,7 +23,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${PORT:-3050}:3000"
+      - "${HOST_PORT:-3051}:3000"
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-bot}:${POSTGRES_PASSWORD:-bot}@db:5432/social_media_bot
