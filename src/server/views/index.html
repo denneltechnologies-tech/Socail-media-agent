@@ -244,8 +244,18 @@
       width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text); font-size: 0.85rem; font-family: inherit; transition: border-color .15s;
     }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
     .form-group textarea { min-height: 85px; resize: vertical; }
+    .day-chip {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 2px; cursor: pointer; font-size: 0.72rem; font-weight: 600;
+      color: var(--text-secondary); transition: all .15s ease; user-select: none;
+    }
+    .day-chip:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.06); }
+    .day-chip:has(input:checked) {
+      background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.45); color: #38bdf8;
+    }
+    .day-chip input[type="checkbox"] { width: 14px; height: 14px; accent-color: #38bdf8; cursor: pointer; }
 
     /* Toast */
     .toast-container { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
@@ -1961,33 +1971,96 @@
           <textarea id="af-prompt" rows="2" placeholder="e.g. Travel destinations, flight deals, vacation itineraries, and tips">${esc(currPrompt)}</textarea>
           <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Defines the topics and creative direction for automated posts</div>
         </div>
-        <div class="form-group">
-          <label style="display:flex;justify-content:space-between;align-items:center">
-            <span>Automated Posting Schedule</span>
-            <span id="af-schedule-human" style="font-size:0.75rem;color:var(--accent);font-weight:600">Every 4 Hours</span>
-          </label>
-          <select id="af-schedule-preset" onchange="onSchedulePresetChange()" style="margin-bottom:6px">
-            <option value="0 */4 * * *">🌟 Every 4 Hours (Recommended — 6 posts/day)</option>
-            <option value="0 */2 * * *">🚀 Every 2 Hours (Active — 12 posts/day)</option>
-            <option value="0 */3 * * *">⚡ Every 3 Hours (8 posts/day)</option>
-            <option value="0 */6 * * *">⏰ Every 6 Hours (Balanced — 4 posts/day)</option>
-            <option value="0 */8 * * *">⏱️ Every 8 Hours (Moderate — 3 posts/day)</option>
-            <option value="0 */12 * * *">📅 Twice a Day (Every 12 Hours)</option>
-            <option value="0 9,18 * * *">🌅 Twice a Day (Morning 9:00 AM & Evening 6:00 PM)</option>
-            <option value="0 9 * * *">☀️ Once a Day (Morning at 9:00 AM)</option>
-            <option value="0 19 * * *">🌙 Once a Day (Evening at 7:00 PM)</option>
-            <option value="0 * * * *">⚡ Every Hour (24 posts/day)</option>
-            <option value="manual">⏸️ Manual Only (Disable Auto-Posting)</option>
-            <option value="custom">⚙️ Custom Cron Expression (Advanced)</option>
-          </select>
-          <div id="af-schedule-custom-wrap" style="display:none;margin-top:6px">
-            <input id="af-schedule" placeholder="e.g. 0 */4 * * *" value="${esc(currSchedule)}" oninput="updateScheduleHint(this.value)">
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">
-              Standard 5-part cron syntax: <code>minute hour day month day-of-week</code>
+        <div class="form-group" style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <div style="font-weight:700;font-size:0.88rem;color:var(--text)">📅 Automated Posting Schedule</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">Configure frequency, date/days, and publishing time</div>
+            </div>
+            <span id="af-schedule-badge" class="badge" style="background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);font-size:0.75rem"></span>
+          </div>
+
+          <!-- 1. Frequency Mode -->
+          <div style="margin-bottom:12px">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Frequency</label>
+            <select id="af-sched-freq" onchange="onScheduleBuilderChange()">
+              <option value="interval">⏱️ Interval (Every X Hours)</option>
+              <option value="daily">☀️ Daily (Every day at specific time)</option>
+              <option value="days_of_week">🗓️ Specific Days of the Week</option>
+              <option value="monthly">📆 Specific Day of the Month</option>
+              <option value="manual">⏸️ Manual Only (Pause Auto-Posting)</option>
+              <option value="custom">⚙️ Advanced (Custom Cron)</option>
+            </select>
+          </div>
+
+          <!-- 2A. Interval options (Every X hours) -->
+          <div id="af-sched-row-interval" style="margin-bottom:12px">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Posting Interval</label>
+            <select id="af-sched-interval-val" onchange="onScheduleBuilderChange()">
+              <option value="4" selected>Every 4 Hours (Recommended — 6 posts/day)</option>
+              <option value="1">Every Hour (24 posts/day)</option>
+              <option value="2">Every 2 Hours (12 posts/day)</option>
+              <option value="3">Every 3 Hours (8 posts/day)</option>
+              <option value="6">Every 6 Hours (4 posts/day)</option>
+              <option value="8">Every 8 Hours (3 posts/day)</option>
+              <option value="12">Every 12 Hours (Twice a day)</option>
+            </select>
+          </div>
+
+          <!-- 2B. Days of Week selector -->
+          <div id="af-sched-row-days" style="display:none;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin:0">Active Days of the Week</label>
+              <div style="display:flex;gap:6px">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setDaysPreset('all')" style="font-size:0.68rem;padding:2px 8px">All Days</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setDaysPreset('weekdays')" style="font-size:0.68rem;padding:2px 8px">Mon - Fri</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setDaysPreset('weekends')" style="font-size:0.68rem;padding:2px 8px">Sat - Sun</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:4px">
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="1" onchange="onScheduleBuilderChange()" checked><span>Mon</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="2" onchange="onScheduleBuilderChange()" checked><span>Tue</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="3" onchange="onScheduleBuilderChange()" checked><span>Wed</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="4" onchange="onScheduleBuilderChange()" checked><span>Thu</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="5" onchange="onScheduleBuilderChange()" checked><span>Fri</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="6" onchange="onScheduleBuilderChange()"><span>Sat</span></label>
+              <label class="day-chip"><input type="checkbox" class="af-day-check" value="0" onchange="onScheduleBuilderChange()"><span>Sun</span></label>
             </div>
           </div>
-          <div id="af-schedule-hint" style="font-size:0.75rem;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-top:6px">
-            Automated posts will be generated and published once every 4 hours.
+
+          <!-- 2C. Day of Month selector -->
+          <div id="af-sched-row-dom" style="display:none;margin-bottom:12px">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Day of the Month</label>
+            <select id="af-sched-dom-val" onchange="onScheduleBuilderChange()">
+              ${Array.from({ length: 31 }, (_, i) => i + 1).map(n => {
+                const sfx = (n === 1 || n === 21 || n === 31) ? 'st' : (n === 2 || n === 22) ? 'nd' : (n === 3 || n === 23) ? 'rd' : 'th';
+                return `<option value="${n}">${n}${sfx} of the month</option>`;
+              }).join('')}
+            </select>
+          </div>
+
+          <!-- 3. Time Picker (for daily, days_of_week, and monthly) -->
+          <div id="af-sched-row-time" style="display:none;margin-bottom:12px">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Publishing Time (Hour & Minute)</label>
+            <input type="time" id="af-sched-time-val" value="09:00" onchange="onScheduleBuilderChange()">
+          </div>
+
+          <!-- 4. Custom Raw Cron input (only shown if frequency === 'custom') -->
+          <div id="af-sched-row-custom" style="display:none;margin-bottom:12px">
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px">Custom Cron Expression</label>
+            <input id="af-sched-custom-cron" placeholder="e.g. 0 */4 * * *" value="${esc(currSchedule)}" oninput="onCustomCronInput(this.value)">
+          </div>
+
+          <!-- Hidden input that actually gets sent with payload -->
+          <input type="hidden" id="af-schedule" value="${esc(currSchedule)}">
+
+          <!-- Plain English Schedule Summary Card -->
+          <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div>
+              <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Active Schedule</div>
+              <div id="af-sched-summary" style="font-size:0.84rem;color:var(--text);font-weight:600;margin-top:2px">Every 4 Hours (6 posts/day)</div>
+            </div>
+            <code id="af-sched-cron-display" style="font-size:0.72rem;color:var(--accent);background:rgba(56,189,248,0.08);padding:3px 8px;border-radius:4px">${esc(currSchedule)}</code>
           </div>
         </div>`;
       const footer = `
@@ -1995,7 +2068,7 @@
         <button class="btn btn-primary" onclick="saveAccount('${isEdit ? id : ''}')">Save</button>`;
       openModal(isEdit ? 'Edit Account' : 'Link Social Account', body, footer);
       onAccountPlatformChange();
-      initSchedulePreset(currSchedule);
+      initScheduleBuilder(currSchedule);
     }
 
     function onAccountPlatformChange() {
@@ -2041,10 +2114,6 @@
         '0 */8 * * *': 'Every 8 Hours (3 posts/day)',
         '0 */12 * * *': 'Twice a Day (Every 12h)',
         '0 9,18 * * *': 'Twice a Day (9am & 6pm)',
-        '0 9 * * *': 'Daily at 9:00 AM',
-        '0 12 * * *': 'Daily at 12:00 PM',
-        '0 18 * * *': 'Daily at 6:00 PM',
-        '0 19 * * *': 'Daily at 7:00 PM',
         '0 * * * *': 'Every Hour (24 posts/day)',
         '*/30 * * * *': 'Every 30 Minutes',
       };
@@ -2052,68 +2121,191 @@
 
       const parts = trimmed.split(/\s+/);
       if (parts.length === 5) {
-        const [min, hour] = parts;
-        if (min === '0' && hour.startsWith('*/')) {
-          return `Every ${hour.replace('*/', '')} Hours`;
+        const [minStr, hourStr, dom, mon, dow] = parts;
+        const min = parseInt(minStr, 10);
+        const hour = parseInt(hourStr, 10);
+        const hasValidTime = !isNaN(min) && !isNaN(hour) && !hourStr.includes('*') && !minStr.includes('*');
+
+        const formatTime = (h, m) => {
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const dh = h % 12 || 12;
+          return `${dh}:${m.toString().padStart(2, '0')} ${ampm}`;
+        };
+
+        // Every X hours
+        if (min === 0 && hourStr.startsWith('*/') && dom === '*' && mon === '*' && dow === '*') {
+          return `Every ${hourStr.replace('*/', '')} Hours`;
         }
-        if (parts[2] === '*' && parts[3] === '*' && parts[4] === '*') {
-          if (!hour.includes('*') && !hour.includes('/')) {
-            const h = parseInt(hour, 10);
-            if (!isNaN(h)) {
-              const ampm = h >= 12 ? 'PM' : 'AM';
-              const displayH = h % 12 || 12;
-              return `Daily at ${displayH}:${min.padStart(2, '0')} ${ampm}`;
-            }
-          }
+
+        // Daily at time
+        if (hasValidTime && dom === '*' && mon === '*' && dow === '*') {
+          return `Daily at ${formatTime(hour, min)}`;
+        }
+
+        // Days of week
+        if (hasValidTime && dom === '*' && mon === '*' && dow !== '*') {
+          const dayMap = { '1': 'Mon', '2': 'Tue', '3': 'Wed', '4': 'Thu', '5': 'Fri', '6': 'Sat', '0': 'Sun', '7': 'Sun' };
+          const days = dow.split(',').map(d => dayMap[d] || d);
+          let dayDesc = days.join(', ');
+          if (dow === '1,2,3,4,5') dayDesc = 'Weekdays (Mon-Fri)';
+          else if (dow === '6,0' || dow === '0,6') dayDesc = 'Weekends (Sat-Sun)';
+          else if (dow === '1,2,3,4,5,6,0' || dow === '0,1,2,3,4,5,6') dayDesc = 'Every Day';
+          return `${dayDesc} at ${formatTime(hour, min)}`;
+        }
+
+        // Specific day of month
+        if (hasValidTime && dom !== '*' && mon === '*' && dow === '*') {
+          const sfx = (dom === '1' || dom === '21' || dom === '31') ? 'st' : (dom === '2' || dom === '22') ? 'nd' : (dom === '3' || dom === '23') ? 'rd' : 'th';
+          return `${dom}${sfx} of month at ${formatTime(hour, min)}`;
         }
       }
+
       return trimmed;
     }
 
-    function initSchedulePreset(cron) {
-      const sel = document.getElementById('af-schedule-preset');
-      const customWrap = document.getElementById('af-schedule-custom-wrap');
-      const input = document.getElementById('af-schedule');
-      if (!sel || !input) return;
+    function initScheduleBuilder(cron) {
+      const expr = (cron || '0 */4 * * *').trim();
+      const freqSel = document.getElementById('af-sched-freq');
+      if (!freqSel) return;
 
-      const hasOption = Array.from(sel.options).some(opt => opt.value === cron);
-      if (hasOption) {
-        sel.value = cron;
-        if (customWrap) customWrap.style.display = 'none';
+      if (expr === 'manual' || expr === 'Manual') {
+        freqSel.value = 'manual';
       } else {
-        sel.value = 'custom';
-        if (customWrap) customWrap.style.display = 'block';
-      }
-      updateScheduleHint(cron);
-    }
-
-    function onSchedulePresetChange() {
-      const sel = document.getElementById('af-schedule-preset');
-      const customWrap = document.getElementById('af-schedule-custom-wrap');
-      const input = document.getElementById('af-schedule');
-      if (!sel || !input) return;
-
-      if (sel.value === 'custom') {
-        if (customWrap) customWrap.style.display = 'block';
-      } else {
-        if (customWrap) customWrap.style.display = 'none';
-        input.value = sel.value;
-      }
-      updateScheduleHint(input.value);
-    }
-
-    function updateScheduleHint(cron) {
-      const hint = document.getElementById('af-schedule-hint');
-      const human = document.getElementById('af-schedule-human');
-      const desc = describeCron(cron);
-      if (human) human.textContent = desc;
-      if (hint) {
-        if (!cron || cron === 'manual') {
-          hint.innerHTML = `<strong>Schedule:</strong> Auto-posting is paused. Posts must be published manually.`;
+        const parts = expr.split(/\s+/);
+        if (parts.length === 5) {
+          const [min, hour, dom, mon, dow] = parts;
+          if (dom === '*' && mon === '*' && dow === '*') {
+            if (min === '0' && hour.startsWith('*/')) {
+              freqSel.value = 'interval';
+              const intervalSel = document.getElementById('af-sched-interval-val');
+              if (intervalSel) intervalSel.value = hour.replace('*/', '');
+            } else if (!hour.includes('*') && !hour.includes('/')) {
+              freqSel.value = 'daily';
+              const timeInput = document.getElementById('af-sched-time-val');
+              if (timeInput) {
+                const h = parseInt(hour, 10).toString().padStart(2, '0');
+                const m = parseInt(min, 10).toString().padStart(2, '0');
+                timeInput.value = `${h}:${m}`;
+              }
+            } else {
+              freqSel.value = 'custom';
+            }
+          } else if (dom === '*' && mon === '*' && dow !== '*') {
+            freqSel.value = 'days_of_week';
+            const timeInput = document.getElementById('af-sched-time-val');
+            if (timeInput && !hour.includes('*')) {
+              const h = parseInt(hour, 10).toString().padStart(2, '0');
+              const m = parseInt(min, 10).toString().padStart(2, '0');
+              timeInput.value = `${h}:${m}`;
+            }
+            const activeDays = new Set(dow.split(',').map(d => parseInt(d, 10)));
+            document.querySelectorAll('.af-day-check').forEach(cb => {
+              cb.checked = activeDays.has(parseInt(cb.value, 10));
+            });
+          } else if (dom !== '*' && mon === '*' && dow === '*') {
+            freqSel.value = 'monthly';
+            const domSel = document.getElementById('af-sched-dom-val');
+            if (domSel) domSel.value = dom;
+            const timeInput = document.getElementById('af-sched-time-val');
+            if (timeInput && !hour.includes('*')) {
+              const h = parseInt(hour, 10).toString().padStart(2, '0');
+              const m = parseInt(min, 10).toString().padStart(2, '0');
+              timeInput.value = `${h}:${m}`;
+            }
+          } else {
+            freqSel.value = 'custom';
+          }
         } else {
-          hint.innerHTML = `<strong>Schedule:</strong> Posts automatically <em>${esc(desc)}</em>.<br><span style="color:var(--text-muted);font-size:0.72rem">System cron syntax: <code>${esc(cron)}</code></span>`;
+          freqSel.value = 'custom';
         }
       }
+
+      const customInput = document.getElementById('af-sched-custom-cron');
+      if (customInput) customInput.value = expr;
+
+      onScheduleBuilderChange(true);
+    }
+
+    function onScheduleBuilderChange(skipCustomUpdate = false) {
+      const freq = document.getElementById('af-sched-freq')?.value || 'interval';
+      const rowInterval = document.getElementById('af-sched-row-interval');
+      const rowDays = document.getElementById('af-sched-row-days');
+      const rowDom = document.getElementById('af-sched-row-dom');
+      const rowTime = document.getElementById('af-sched-row-time');
+      const rowCustom = document.getElementById('af-sched-row-custom');
+      const hiddenInput = document.getElementById('af-schedule');
+
+      if (rowInterval) rowInterval.style.display = freq === 'interval' ? 'block' : 'none';
+      if (rowDays) rowDays.style.display = freq === 'days_of_week' ? 'block' : 'none';
+      if (rowDom) rowDom.style.display = freq === 'monthly' ? 'block' : 'none';
+      if (rowTime) rowTime.style.display = (freq === 'daily' || freq === 'days_of_week' || freq === 'monthly') ? 'block' : 'none';
+      if (rowCustom) rowCustom.style.display = freq === 'custom' ? 'block' : 'none';
+
+      let calculatedCron = '0 */4 * * *';
+      const timeVal = document.getElementById('af-sched-time-val')?.value || '09:00';
+      const [hStr, mStr] = timeVal.split(':');
+      const min = parseInt(mStr || '0', 10);
+      const hour = parseInt(hStr || '9', 10);
+
+      if (freq === 'interval') {
+        const hours = document.getElementById('af-sched-interval-val')?.value || '4';
+        calculatedCron = hours === '1' ? '0 * * * *' : `0 */${hours} * * *`;
+      } else if (freq === 'daily') {
+        calculatedCron = `${min} ${hour} * * *`;
+      } else if (freq === 'days_of_week') {
+        const checkedDays = Array.from(document.querySelectorAll('.af-day-check:checked')).map(cb => cb.value);
+        const dayStr = checkedDays.length > 0 ? checkedDays.join(',') : '*';
+        calculatedCron = `${min} ${hour} * * ${dayStr}`;
+      } else if (freq === 'monthly') {
+        const dom = document.getElementById('af-sched-dom-val')?.value || '1';
+        calculatedCron = `${min} ${hour} ${dom} * *`;
+      } else if (freq === 'manual') {
+        calculatedCron = 'manual';
+      } else if (freq === 'custom') {
+        calculatedCron = document.getElementById('af-sched-custom-cron')?.value.trim() || '0 */4 * * *';
+      }
+
+      if (hiddenInput) hiddenInput.value = calculatedCron;
+      if (!skipCustomUpdate) {
+        const customInput = document.getElementById('af-sched-custom-cron');
+        if (customInput && freq !== 'custom') customInput.value = calculatedCron;
+      }
+
+      const desc = describeCron(calculatedCron);
+      const summaryEl = document.getElementById('af-sched-summary');
+      const badgeEl = document.getElementById('af-schedule-badge');
+      const cronDisplayEl = document.getElementById('af-sched-cron-display');
+
+      if (summaryEl) summaryEl.textContent = desc;
+      if (badgeEl) badgeEl.textContent = desc;
+      if (cronDisplayEl) cronDisplayEl.textContent = calculatedCron;
+    }
+
+    function onCustomCronInput(val) {
+      const hiddenInput = document.getElementById('af-schedule');
+      if (hiddenInput) hiddenInput.value = val.trim();
+      const desc = describeCron(val.trim());
+      const summaryEl = document.getElementById('af-sched-summary');
+      const badgeEl = document.getElementById('af-schedule-badge');
+      const cronDisplayEl = document.getElementById('af-sched-cron-display');
+      if (summaryEl) summaryEl.textContent = desc;
+      if (badgeEl) badgeEl.textContent = desc;
+      if (cronDisplayEl) cronDisplayEl.textContent = val.trim();
+    }
+
+    function setDaysPreset(preset) {
+      const checkboxes = document.querySelectorAll('.af-day-check');
+      checkboxes.forEach(cb => {
+        const val = parseInt(cb.value, 10);
+        if (preset === 'all') {
+          cb.checked = true;
+        } else if (preset === 'weekdays') {
+          cb.checked = val >= 1 && val <= 5;
+        } else if (preset === 'weekends') {
+          cb.checked = val === 0 || val === 6;
+        }
+      });
+      onScheduleBuilderChange();
     }
 
     async function saveAccount(id) {
