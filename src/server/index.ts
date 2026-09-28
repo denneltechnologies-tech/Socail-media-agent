@@ -2,6 +2,8 @@ import express from 'express';
 import type { Server } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
+import { rateLimit } from 'express-rate-limit';
 import { sql } from 'drizzle-orm';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
@@ -43,7 +45,28 @@ export function createServer(): express.Express {
     }
   });
 
+  app.use(cookieParser());
   app.use(express.json({ limit: '1mb' }));
+
+  // Strict Brute-Force Rate Limiter for Login
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 10, // Max 10 login attempts per window
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts. Please wait 15 minutes before trying again.' },
+  });
+  app.use('/api/auth/login', loginLimiter);
+
+  // General API Rate Limiter
+  const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    limit: 300,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    skip: (req) => req.path === '/api/health' || req.path.startsWith('/public/'),
+  });
+  app.use('/api', apiLimiter);
 
   app.use(appAuth({
     publicPaths: [
@@ -86,17 +109,16 @@ export function createServer(): express.Express {
 }
 
 export function startServer(): Server {
-  if (!env.DASHBOARD_PASSWORD) {
-    const msg = 'DASHBOARD_PASSWORD is not set — the dashboard and API are accessible without authentication';
-    if (env.NODE_ENV === 'production') {
-      logger.warn(`${msg}. Set it before exposing this server to a network.`);
-    } else {
-      logger.info(msg);
-    }
+  if (env.NODE_ENV === 'production' && !env.DASHBOARD_PASSWORD) {
+    const errorMsg = 'FATAL SECURITY CONFIGURATION: DASHBOARD_PASSWORD must be configured in production environment to prevent unauthorized access.';
+    logger.error(errorMsg);
+    throw new Error(errorMsg);
+  } else if (!env.DASHBOARD_PASSWORD) {
+    logger.info('DASHBOARD_PASSWORD is not set — running in development mode without authentication.');
   }
 
   const app = createServer();
-  return app.listen(env.PORT, () => {
-    logger.info(`Web UI running on http://localhost:${env.PORT}`);
+  return app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`Web UI running on http://0.0.0.0:${env.PORT}`);
   });
 }

@@ -34,8 +34,12 @@ authRouter.post('/login', (req, res) => {
 });
 
 authRouter.post('/logout', (req, res) => {
+  const cookieHeader = typeof req.headers.cookie === 'string' ? req.headers.cookie : '';
+  const cookieMatch = cookieHeader.match(/(?:^|;\s*)session_token=([^;]+)/);
+  const matchedCookie = cookieMatch?.[1] ? decodeURIComponent(cookieMatch[1]) : undefined;
   const token = req.headers.authorization?.replace(/^Bearer\s+/, '')
-    ?? req.cookies?.['session_token'];
+    ?? req.cookies?.['session_token']
+    ?? matchedCookie;
   if (token) {
     invalidateSession(token);
   }
