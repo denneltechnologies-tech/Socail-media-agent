@@ -655,10 +655,10 @@
         <div class="dash-section">
           <table>
             <thead>
-              <tr><th>Username</th><th>Platform</th><th>Role</th><th>Project</th><th>Schedule (Cron)</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Username</th><th>Platform</th><th>Role</th><th>Project</th><th>Connection</th><th>Schedule (Cron)</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody id="accounts-table">
-              <tr><td colspan="7" class="loading">Loading accounts...</td></tr>
+              <tr><td colspan="8" class="loading">Loading accounts...</td></tr>
             </tbody>
           </table>
         </div>
@@ -858,7 +858,10 @@
             <h3>📡 Social Media Platform Credentials</h3>
             <p class="sub">Configure API access keys for automated publishing</p>
 
-            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">Twitter / X (Developer v2)</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h4 style="font-size:0.85rem;color:var(--text);margin:0">Twitter / X (Developer v2)</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="testPlatformSettings('twitter', this)">⚡ Test Connection</button>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
               <div class="settings-input-wrap">
                 <input type="password" id="cfg-TWITTER_API_KEY" placeholder="API Key">
@@ -878,7 +881,10 @@
               </div>
             </div>
 
-            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">Instagram Graph API</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h4 style="font-size:0.85rem;color:var(--text);margin:0">Instagram Graph API</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="testPlatformSettings('instagram', this)">⚡ Test Connection</button>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
               <div class="settings-input-wrap">
                 <input type="password" id="cfg-INSTAGRAM_ACCESS_TOKEN" placeholder="Instagram Access Token">
@@ -889,7 +895,10 @@
               </div>
             </div>
 
-            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">YouTube Data API v3</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h4 style="font-size:0.85rem;color:var(--text);margin:0">YouTube Data API v3</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="testPlatformSettings('youtube', this)">⚡ Test Connection</button>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
               <div class="settings-input-wrap">
                 <input type="text" id="cfg-YOUTUBE_CLIENT_ID" placeholder="Client ID">
@@ -904,7 +913,10 @@
               </div>
             </div>
 
-            <h4 style="font-size:0.85rem;color:var(--text);margin-bottom:12px">TikTok Content API</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h4 style="font-size:0.85rem;color:var(--text);margin:0">TikTok Content API</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="testPlatformSettings('tiktok', this)">⚡ Test Connection</button>
+            </div>
             <div class="settings-input-wrap" style="margin-bottom:14px">
               <input type="password" id="cfg-TIKTOK_ACCESS_TOKEN" placeholder="TikTok Access Token">
               <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TIKTOK_ACCESS_TOKEN', this)">👁</button>
@@ -1788,22 +1800,34 @@
         document.getElementById('nav-accounts-count').textContent = accounts.length;
         const tbody = document.getElementById('accounts-table');
         if (accounts.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="empty">No accounts linked yet</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">No accounts linked yet</td></tr>';
           return;
         }
-        tbody.innerHTML = accounts.map(a => `
+        tbody.innerHTML = accounts.map(a => {
+          let credBadge = '';
+          if (a.hasCredentials) {
+            credBadge = '<span class="badge" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)" title="Custom keys saved for this account">🟢 Account Keys</span>';
+          } else if (a.hasEffectiveCredentials) {
+            credBadge = '<span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)" title="Using global keys from Settings tab">🔵 System Keys</span>';
+          } else {
+            credBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)" title="No credentials configured">⚠️ Missing Keys</span>';
+          }
+          return `
           <tr>
             <td><strong>@${esc(a.username)}</strong></td>
             <td><span class="badge badge-${a.platform}">${a.platform}</span></td>
             <td>${esc(a.role || 'creator')}</td>
             <td>${esc(projectsMap[a.projectId] || '-')}</td>
+            <td>${credBadge}</td>
             <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual')}</td>
             <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
-            <td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-secondary btn-sm" onclick="testAccountConnection('${a.id}', this)" title="Test API connection for this account">⚡ Test</button>
               <button class="btn btn-secondary btn-sm" onclick="openAccountModal('${a.id}')">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deleteAccount('${a.id}')">Delete</button>
             </td>
-          </tr>`).join('');
+          </tr>`;
+        }).join('');
       } catch (err) { toast(err.message, 'error'); }
     }
 
@@ -1826,7 +1850,7 @@
         </div>
         <div class="form-group">
           <label>Platform</label>
-          <select id="af-platform">
+          <select id="af-platform" onchange="onAccountPlatformChange()">
             <option value="instagram" ${currPlatform === 'instagram' ? 'selected' : ''}>Instagram</option>
             <option value="twitter" ${currPlatform === 'twitter' ? 'selected' : ''}>Twitter / X</option>
             <option value="youtube" ${currPlatform === 'youtube' ? 'selected' : ''}>YouTube</option>
@@ -1838,6 +1862,51 @@
           <input id="af-username" placeholder="e.g. brand_official or https://instagram.com/brand_official" value="${esc(currUsername)}">
           <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Paste your handle (@username) or full profile URL</div>
         </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="margin:0;font-size:0.8rem;font-weight:600">Account Credentials (Optional Override)</label>
+            ${isEdit ? `<button type="button" class="btn btn-secondary btn-sm" onclick="testAccountConnection('${id}', this)">⚡ Test Connection</button>` : ''}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px">
+            Leave blank to automatically use system credentials from the <strong>Settings</strong> tab, or enter account-specific keys below.
+          </div>
+
+          <div id="af-creds-instagram" style="display:none">
+            <div class="form-group" style="margin-bottom:8px">
+              <label style="font-size:0.75rem">Instagram Access Token</label>
+              <input type="password" id="af-ig-token" placeholder="Leave blank to use Settings tab">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label style="font-size:0.75rem">Instagram Business Account ID</label>
+              <input type="text" id="af-ig-id" placeholder="e.g. 17841400000000000">
+            </div>
+          </div>
+
+          <div id="af-creds-twitter" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <input type="password" id="af-tw-apiKey" placeholder="API Key">
+              <input type="password" id="af-tw-apiSecret" placeholder="API Key Secret">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <input type="password" id="af-tw-accessToken" placeholder="Access Token">
+              <input type="password" id="af-tw-accessSecret" placeholder="Access Secret">
+            </div>
+          </div>
+
+          <div id="af-creds-youtube" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <input type="text" id="af-yt-clientId" placeholder="OAuth Client ID">
+              <input type="password" id="af-yt-clientSecret" placeholder="Client Secret">
+            </div>
+            <input type="password" id="af-yt-refreshToken" placeholder="Refresh Token" style="margin-top:8px">
+          </div>
+
+          <div id="af-creds-tiktok" style="display:none">
+            <input type="password" id="af-tt-token" placeholder="TikTok Access Token">
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Content Theme & Prompt Strategy</label>
           <textarea id="af-prompt" rows="2" placeholder="e.g. Travel destinations, flight deals, vacation itineraries, and tips">${esc(currPrompt)}</textarea>
@@ -1851,6 +1920,15 @@
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveAccount('${isEdit ? id : ''}')">Save</button>`;
       openModal(isEdit ? 'Edit Account' : 'Link Social Account', body, footer);
+      onAccountPlatformChange();
+    }
+
+    function onAccountPlatformChange() {
+      const plat = document.getElementById('af-platform')?.value;
+      ['instagram', 'twitter', 'youtube', 'tiktok'].forEach(p => {
+        const el = document.getElementById(`af-creds-${p}`);
+        if (el) el.style.display = p === plat ? 'block' : 'none';
+      });
     }
 
     async function saveAccount(id) {
@@ -1867,18 +1945,53 @@
         }
         clean = clean.replace(/^@+/, '');
 
+        const plat = document.getElementById('af-platform').value;
         const cron = document.getElementById('af-schedule').value.trim() || '0 */4 * * *';
         const promptTemplate = document.getElementById('af-prompt')?.value?.trim() || 'Engaging and valuable content for our audience.';
 
+        const creds = {};
+        if (plat === 'instagram') {
+          const t = document.getElementById('af-ig-token')?.value?.trim();
+          const b = document.getElementById('af-ig-id')?.value?.trim();
+          if (t) creds.accessToken = t;
+          if (b) creds.businessAccountId = b;
+        } else if (plat === 'twitter') {
+          const ak = document.getElementById('af-tw-apiKey')?.value?.trim();
+          const as = document.getElementById('af-tw-apiSecret')?.value?.trim();
+          const at = document.getElementById('af-tw-accessToken')?.value?.trim();
+          const ts = document.getElementById('af-tw-accessSecret')?.value?.trim();
+          if (ak && as && at && ts) {
+            creds.apiKey = ak;
+            creds.apiSecret = as;
+            creds.accessToken = at;
+            creds.accessSecret = ts;
+          }
+        } else if (plat === 'youtube') {
+          const cid = document.getElementById('af-yt-clientId')?.value?.trim();
+          const cs = document.getElementById('af-yt-clientSecret')?.value?.trim();
+          const rt = document.getElementById('af-yt-refreshToken')?.value?.trim();
+          if (cid) creds.clientId = cid;
+          if (cs) creds.clientSecret = cs;
+          if (rt) creds.refreshToken = rt;
+        } else if (plat === 'tiktok') {
+          const tk = document.getElementById('af-tt-token')?.value?.trim();
+          if (tk) creds.accessToken = tk;
+        }
+
+        const defaultTypes = plat === 'instagram' ? ['image', 'reel'] :
+                             plat === 'youtube' ? ['video', 'short'] :
+                             plat === 'tiktok' ? ['video'] : ['text', 'image'];
+
         const payload = {
           projectId: document.getElementById('af-project').value,
-          platform: document.getElementById('af-platform').value,
+          platform: plat,
           username: clean,
-          credentials: {},
+          credentials: creds,
           strategy: {
             active: true,
             cronExpression: cron,
             promptTemplate,
+            contentTypes: defaultTypes,
             contentMix: { original: 80, repost: 15, reply: 5 },
           },
         };
@@ -1892,6 +2005,52 @@
         closeModal();
         loadAccounts();
       } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function testAccountConnection(id, btn) {
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="width:12px;height:12px"></span>';
+      }
+      try {
+        const res = await api(`/api/accounts/${id}/test`, { method: 'POST' });
+        if (res.success) {
+          toast(res.message || 'Connection verified successfully!', 'success');
+        } else {
+          toast(res.error || res.message || 'Connection test failed', 'error');
+        }
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = orig;
+        }
+      }
+    }
+
+    async function testPlatformSettings(platform, btn) {
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="width:12px;height:12px"></span> Testing...';
+      }
+      try {
+        const res = await api(`/api/settings/test-platform/${platform}`, { method: 'POST' });
+        if (res.success) {
+          toast(res.message || `${platform} connection verified!`, 'success');
+        } else {
+          toast(res.error || res.message || `${platform} connection test failed`, 'error');
+        }
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = orig;
+        }
+      }
     }
 
     async function deleteAccount(id) {
@@ -2024,7 +2183,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="form-group">
             <label>Platform</label>
-            <select id="gf-platform">
+            <select id="gf-platform" onchange="onGeneratePlatformChange()">
               <option value="twitter">Twitter</option>
               <option value="instagram">Instagram</option>
               <option value="youtube">YouTube</option>
@@ -2077,6 +2236,54 @@
         <button class="btn btn-primary" id="gf-submit" onclick="generateContent()">Generate Post</button>`;
       openModal('Generate AI Content', body, footer);
       onGenerateProjectChange();
+      onGeneratePlatformChange();
+    }
+
+    function onGeneratePlatformChange() {
+      const plat = document.getElementById('gf-platform')?.value;
+      const ctSelect = document.getElementById('gf-contentType');
+      if (!ctSelect) return;
+
+      const textOpt = ctSelect.querySelector('option[value="text"]');
+      const imageOpt = ctSelect.querySelector('option[value="image"]');
+      const reelOpt = ctSelect.querySelector('option[value="reel"]');
+      const shortOpt = ctSelect.querySelector('option[value="short"]');
+      const videoOpt = ctSelect.querySelector('option[value="video"]');
+
+      if (plat === 'instagram') {
+        if (textOpt) { textOpt.disabled = true; textOpt.textContent = 'Text Post (Not supported on Instagram)'; }
+        if (imageOpt) { imageOpt.disabled = false; imageOpt.textContent = 'Image + Text Post'; }
+        if (reelOpt) { reelOpt.disabled = false; reelOpt.textContent = 'Instagram Reel'; }
+        if (shortOpt) shortOpt.disabled = true;
+        if (videoOpt) videoOpt.disabled = false;
+        if (ctSelect.value === 'text' || ctSelect.value === 'short') {
+          ctSelect.value = 'image';
+        }
+      } else if (plat === 'youtube') {
+        if (textOpt) { textOpt.disabled = true; textOpt.textContent = 'Text Post (Not supported on YouTube)'; }
+        if (imageOpt) { imageOpt.disabled = true; imageOpt.textContent = 'Image Post (Not supported on YouTube)'; }
+        if (reelOpt) reelOpt.disabled = true;
+        if (shortOpt) { shortOpt.disabled = false; shortOpt.textContent = 'YouTube Short'; }
+        if (videoOpt) { videoOpt.disabled = false; videoOpt.textContent = 'Full AI Video'; }
+        if (ctSelect.value === 'text' || ctSelect.value === 'image' || ctSelect.value === 'reel') {
+          ctSelect.value = 'short';
+        }
+      } else if (plat === 'tiktok') {
+        if (textOpt) { textOpt.disabled = true; textOpt.textContent = 'Text Post (Not supported on TikTok)'; }
+        if (imageOpt) { imageOpt.disabled = true; imageOpt.textContent = 'Image Post (Not supported on TikTok)'; }
+        if (reelOpt) reelOpt.disabled = true;
+        if (shortOpt) shortOpt.disabled = false;
+        if (videoOpt) videoOpt.disabled = false;
+        if (ctSelect.value === 'text' || ctSelect.value === 'image' || ctSelect.value === 'reel') {
+          ctSelect.value = 'video';
+        }
+      } else {
+        if (textOpt) { textOpt.disabled = false; textOpt.textContent = 'Standard Text Post'; }
+        if (imageOpt) { imageOpt.disabled = false; imageOpt.textContent = 'Image + Text Post'; }
+        if (reelOpt) reelOpt.disabled = false;
+        if (shortOpt) shortOpt.disabled = false;
+        if (videoOpt) videoOpt.disabled = false;
+      }
     }
 
     function onGenerateProjectChange() {
@@ -2088,7 +2295,10 @@
         if (cfg.defaultContentType) document.getElementById('gf-contentType').value = cfg.defaultContentType;
         if (cfg.language) document.getElementById('gf-language').value = cfg.language;
         if (cfg.promptTemplate) document.getElementById('gf-prompt').value = cfg.promptTemplate;
-        if (cfg.platforms?.length) document.getElementById('gf-platform').value = cfg.platforms[0];
+        if (cfg.platforms?.length) {
+          document.getElementById('gf-platform').value = cfg.platforms[0];
+          onGeneratePlatformChange();
+        }
       } catch {}
     }
 

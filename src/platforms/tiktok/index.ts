@@ -1,7 +1,11 @@
 import * as fs from 'fs';
+import { eq } from 'drizzle-orm';
 import { Platform } from '../../config/constants.js';
 import { env } from '../../config/env.js';
-import type { GeneratedContent, PlatformPostResult, PostAnalyticsData } from '../../types/index.js';
+import { settingsStore } from '../../config/settings-store.js';
+import { db, schema } from '../../db/index.js';
+import { NonRetryableError } from '../../core/errors.js';
+import type { GeneratedContent, PlatformPostResult, PostAnalyticsData, ConnectionTestResult } from '../../types/index.js';
 import { BasePlatformAdapter } from '../base.js';
 import { logger } from '../../config/logger.js';
 import { composePostText } from '../../core/safety-guard.js';
@@ -9,31 +13,93 @@ import { resolveMediaFile } from '../../core/media.js';
 
 export class TikTokAdapter extends BasePlatformAdapter {
   platform = Platform.TIKTOK as const;
-  private accessToken: string | null = null;
+  private fallbackToken: string | null = null;
+  private tokenCache = new Map<string, string>();
   private readonly baseUrl = 'https://open.tiktokapis.com/v2';
 
   async init(): Promise<void> {
-    if (!env.TIKTOK_ACCESS_TOKEN) {
-      logger.warn('TikTok access token not configured, adapter will be inactive');
+    const token = env.TIKTOK_ACCESS_TOKEN || settingsStore.get('TIKTOK_ACCESS_TOKEN');
+    if (!token) {
+      this.log('Adapter initialized (credentials will be resolved per account or from Settings)');
       return;
     }
 
-    this.accessToken = env.TIKTOK_ACCESS_TOKEN;
-    this.log('Adapter initialized');
+    this.fallbackToken = token;
+    this.log('Adapter initialized with system token');
   }
 
   async destroy(): Promise<void> {
-    this.accessToken = null;
+    this.fallbackToken = null;
+    this.tokenCache.clear();
     this.log('Adapter destroyed');
   }
 
-  private getToken(): string {
-    if (!this.accessToken) throw new Error('TikTok adapter not initialized');
-    return this.accessToken;
+  invalidateAccount(accountId: string): void {
+    this.tokenCache.delete(accountId);
   }
 
-  protected async doPost(content: GeneratedContent, _accountId: string): Promise<PlatformPostResult> {
-    const token = this.getToken();
+  private async getTokenForAccount(accountId?: string): Promise<string> {
+    if (accountId) {
+      const cached = this.tokenCache.get(accountId);
+      if (cached) return cached;
+
+      const [account] = await db
+        .select({ username: schema.accounts.username, credentials: schema.accounts.credentials })
+        .from(schema.accounts)
+        .where(eq(schema.accounts.id, accountId))
+        .limit(1);
+
+      const creds = account?.credentials as Record<string, string> | undefined;
+      const token = creds?.accessToken || creds?.token;
+      if (token) {
+        this.tokenCache.set(accountId, token);
+        return token;
+      }
+    }
+
+    if (this.fallbackToken) {
+      return this.fallbackToken;
+    }
+
+    const token = settingsStore.get('TIKTOK_ACCESS_TOKEN') || env.TIKTOK_ACCESS_TOKEN;
+    if (token) {
+      if (accountId) this.tokenCache.set(accountId, token);
+      return token;
+    }
+
+    throw new NonRetryableError(
+      `No TikTok access token configured${accountId ? ` for account ${accountId}` : ''}. Configure in Connected Accounts, Settings, or .env`
+    );
+  }
+
+  async testConnection(accountId?: string): Promise<ConnectionTestResult> {
+    try {
+      const token = await this.getTokenForAccount(accountId);
+      const res = await fetch(`${this.baseUrl}/user/info/?fields=open_id,union_id,avatar_url,display_name`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errJson = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const msg = errJson?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
+        return { success: false, message: `TikTok verification failed: ${msg}` };
+      }
+      const data = (await res.json()) as { data?: { user?: { display_name?: string; open_id?: string } } };
+      const user = data.data?.user;
+      return {
+        success: true,
+        message: `Successfully connected to TikTok account: ${user?.display_name ?? 'OK'}`,
+        details: user as Record<string, unknown> | undefined,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
+
+  protected async doPost(content: GeneratedContent, accountId: string): Promise<PlatformPostResult> {
+    const token = await this.getTokenForAccount(accountId);
     const mediaUrl = content.mediaUrls?.[0];
 
     if (!mediaUrl) {
@@ -117,8 +183,8 @@ export class TikTokAdapter extends BasePlatformAdapter {
     return false;
   }
 
-  protected async doGetAnalytics(platformPostId: string, _accountId: string): Promise<PostAnalyticsData> {
-    const token = this.getToken();
+  protected async doGetAnalytics(platformPostId: string, accountId: string): Promise<PostAnalyticsData> {
+    const token = await this.getTokenForAccount(accountId);
 
     const res = await fetch(`${this.baseUrl}/video/query/`, {
       method: 'POST',
@@ -153,7 +219,7 @@ export class TikTokAdapter extends BasePlatformAdapter {
       shares: video.share_count,
       impressions: video.view_count,
       reach: video.view_count,
-      engagementRate: video.view_count > 0 ? (engagement / video.view_count) * 100 : 0,
+      engagementRate: video.view_count > 0 ? ((engagement / video.view_count) * 100) : 0,
     };
   }
 }

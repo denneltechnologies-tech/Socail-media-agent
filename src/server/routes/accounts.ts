@@ -8,18 +8,56 @@ import type { AccountStrategy } from '../../types/index.js';
 import { asyncHandler, isUuid, parseBody, requireUuidParam } from '../middleware.js';
 import { createAccountSchema, updateAccountSchema } from '../schemas.js';
 
+import { settingsStore } from '../../config/settings-store.js';
+import { env } from '../../config/env.js';
+import { Platform } from '../../config/constants.js';
+
 export const accountsRouter = Router();
 
 accountsRouter.param('id', (req, res, next) => requireUuidParam(req, res, next));
 
 type AccountRow = typeof schema.accounts.$inferSelect;
 
-/** Never send stored credentials back to the browser — only whether they exist */
+function checkPlatformSystemCredentials(platform: string): boolean {
+  switch (platform) {
+    case 'instagram':
+      return Boolean(
+        (settingsStore.get('INSTAGRAM_ACCESS_TOKEN') || env.INSTAGRAM_ACCESS_TOKEN) &&
+        (settingsStore.get('INSTAGRAM_BUSINESS_ACCOUNT_ID') || env.INSTAGRAM_BUSINESS_ACCOUNT_ID),
+      );
+    case 'twitter':
+      return Boolean(
+        (settingsStore.get('TWITTER_API_KEY') || env.TWITTER_API_KEY) &&
+        (settingsStore.get('TWITTER_API_SECRET') || env.TWITTER_API_SECRET) &&
+        (settingsStore.get('TWITTER_ACCESS_TOKEN') || env.TWITTER_ACCESS_TOKEN) &&
+        (settingsStore.get('TWITTER_ACCESS_SECRET') || env.TWITTER_ACCESS_SECRET),
+      );
+    case 'youtube':
+      return Boolean(
+        (settingsStore.get('YOUTUBE_CLIENT_ID') || env.YOUTUBE_CLIENT_ID) &&
+        (settingsStore.get('YOUTUBE_CLIENT_SECRET') || env.YOUTUBE_CLIENT_SECRET) &&
+        (settingsStore.get('YOUTUBE_REFRESH_TOKEN') || env.YOUTUBE_REFRESH_TOKEN),
+      );
+    case 'tiktok':
+      return Boolean(settingsStore.get('TIKTOK_ACCESS_TOKEN') || env.TIKTOK_ACCESS_TOKEN);
+    default:
+      return false;
+  }
+}
+
+/** Never send stored credentials back to the browser — only status and whether they are active */
 function sanitize({ credentials, ...rest }: AccountRow) {
   const creds = (credentials ?? {}) as Record<string, string>;
+  const hasCustomCredentials = Object.values(creds).some((v) => typeof v === 'string' && v.trim().length > 0);
+  const hasSystemCredentials = checkPlatformSystemCredentials(rest.platform);
+  const hasEffectiveCredentials = hasCustomCredentials || hasSystemCredentials;
+  const credentialSource = hasCustomCredentials ? 'account' : (hasSystemCredentials ? 'system' : 'none');
+
   return {
     ...rest,
-    hasCredentials: Object.values(creds).some((v) => typeof v === 'string' && v.length > 0),
+    hasCredentials: hasCustomCredentials,
+    hasEffectiveCredentials,
+    credentialSource,
   };
 }
 
@@ -167,3 +205,31 @@ accountsRouter.delete('/:id', asyncHandler(async (req, res) => {
   await afterAccountChange(id);
   res.json({ success: true });
 }));
+
+accountsRouter.post('/:id/test', asyncHandler(async (req, res) => {
+  const id = req.params['id'] as string;
+  const [account] = await db
+    .select()
+    .from(schema.accounts)
+    .where(eq(schema.accounts.id, id))
+    .limit(1);
+
+  if (!account) {
+    res.status(404).json({ success: false, error: 'Account not found' });
+    return;
+  }
+
+  const adapter = engine.getAdapter(account.platform as Platform);
+  if (!adapter) {
+    res.status(400).json({ success: false, error: `No adapter registered for platform "${account.platform}"` });
+    return;
+  }
+
+  if (typeof adapter.testConnection === 'function') {
+    const result = await adapter.testConnection(account.id);
+    res.json(result);
+  } else {
+    res.json({ success: true, message: `Adapter for ${account.platform} is registered` });
+  }
+}));
+

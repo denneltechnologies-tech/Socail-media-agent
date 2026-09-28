@@ -3,6 +3,8 @@ import { GoogleGenAI } from '@google/genai';
 import { settingsStore } from '../../config/settings-store.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
+import { engine } from '../../core/engine.js';
+import { Platform } from '../../config/constants.js';
 import { asyncHandler } from '../middleware.js';
 
 export const settingsRouter = Router();
@@ -183,4 +185,21 @@ settingsRouter.post('/test-ai', asyncHandler(async (req, res) => {
     });
   }
 }));
+
+settingsRouter.post('/test-platform/:platform', asyncHandler(async (req, res) => {
+  const platform = req.params['platform'] as Platform;
+  const adapter = engine.getAdapter(platform);
+  if (!adapter) {
+    res.status(400).json({ success: false, error: `No adapter registered for platform "${platform}"` });
+    return;
+  }
+
+  if (typeof adapter.testConnection === 'function') {
+    const result = await adapter.testConnection();
+    res.json(result);
+  } else {
+    res.json({ success: true, message: `Adapter for ${platform} is registered and ready` });
+  }
+}));
+
 

@@ -54,6 +54,12 @@ export interface SafetyCheckResult {
   reasons: string[];
 }
 
+export interface ConnectionTestResult {
+  success: boolean;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
 export interface PlatformAdapter {
   platform: Platform;
   init(): Promise<void>;
@@ -63,6 +69,7 @@ export interface PlatformAdapter {
   uploadMedia?(filePath: string, accountId: string): Promise<string>;
   reply?(platformPostId: string, text: string, accountId: string): Promise<PlatformPostResult>;
   repost?(platformPostId: string, accountId: string): Promise<PlatformPostResult>;
+  testConnection?(accountId?: string): Promise<ConnectionTestResult>;
   /** Called when an account's credentials change so cached clients can be dropped */
   invalidateAccount?(accountId: string): void;
   destroy(): Promise<void>;

@@ -1,8 +1,11 @@
+import { eq } from 'drizzle-orm';
 import { Platform } from '../../config/constants.js';
 import { env } from '../../config/env.js';
-import type { GeneratedContent, PlatformPostResult, PostAnalyticsData } from '../../types/index.js';
+import { settingsStore } from '../../config/settings-store.js';
+import { db, schema } from '../../db/index.js';
+import { NonRetryableError } from '../../core/errors.js';
+import type { GeneratedContent, PlatformPostResult, PostAnalyticsData, ConnectionTestResult } from '../../types/index.js';
 import { BasePlatformAdapter } from '../base.js';
-import { logger } from '../../config/logger.js';
 import { composePostText } from '../../core/safety-guard.js';
 import { toAbsoluteUrl } from '../../core/media.js';
 
@@ -25,35 +28,122 @@ interface IGInsightsResponse {
 
 export class InstagramAdapter extends BasePlatformAdapter {
   platform = Platform.INSTAGRAM as const;
-  private accessToken: string | null = null;
-  private accountId: string | null = null;
+  private credsCache = new Map<string, { token: string; accountId: string; username?: string }>();
 
   async init(): Promise<void> {
-    if (!env.INSTAGRAM_ACCESS_TOKEN || !env.INSTAGRAM_BUSINESS_ACCOUNT_ID) {
-      logger.warn('Instagram credentials not configured, adapter will be inactive');
+    const hasEnv = Boolean(env.INSTAGRAM_ACCESS_TOKEN && env.INSTAGRAM_BUSINESS_ACCOUNT_ID);
+    const hasSettings = Boolean(settingsStore.get('INSTAGRAM_ACCESS_TOKEN') && settingsStore.get('INSTAGRAM_BUSINESS_ACCOUNT_ID'));
+    if (!hasEnv && !hasSettings) {
+      this.log('Adapter initialized (credentials will be resolved per account or from Settings)');
       return;
     }
-
-    this.accessToken = env.INSTAGRAM_ACCESS_TOKEN;
-    this.accountId = env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
     this.log('Adapter initialized');
   }
 
   async destroy(): Promise<void> {
-    this.accessToken = null;
-    this.accountId = null;
+    this.credsCache.clear();
     this.log('Adapter destroyed');
   }
 
-  private getCredentials(): { token: string; accountId: string } {
-    if (!this.accessToken || !this.accountId) {
-      throw new Error('Instagram adapter not initialized');
-    }
-    return { token: this.accessToken, accountId: this.accountId };
+  invalidateAccount(accountId: string): void {
+    this.credsCache.delete(accountId);
   }
 
-  protected async doPost(content: GeneratedContent, _accountId: string): Promise<PlatformPostResult> {
-    const { token, accountId } = this.getCredentials();
+  async getCredentialsForAccount(accountId?: string): Promise<{ token: string; accountId: string; username?: string }> {
+    let token: string | undefined;
+    let businessAccountId: string | undefined;
+    let username: string | undefined;
+
+    if (accountId) {
+      const cached = this.credsCache.get(accountId);
+      if (cached) return cached;
+
+      const [acc] = await db
+        .select({ username: schema.accounts.username, credentials: schema.accounts.credentials })
+        .from(schema.accounts)
+        .where(eq(schema.accounts.id, accountId))
+        .limit(1);
+
+      if (acc) {
+        username = acc.username;
+        const creds = acc.credentials as Record<string, string> | undefined;
+        const rawToken = creds?.accessToken ?? creds?.token;
+        if (typeof rawToken === 'string') {
+          token = rawToken.trim();
+        }
+        const rawId = creds?.businessAccountId ?? creds?.accountId ?? creds?.igBusinessAccountId;
+        if (typeof rawId === 'string') {
+          businessAccountId = rawId.trim();
+        }
+      }
+    }
+
+    // Fall back to settings store
+    if (!token) {
+      const st = settingsStore.get('INSTAGRAM_ACCESS_TOKEN')?.trim();
+      if (st) token = st;
+    }
+    if (!businessAccountId) {
+      const sb = settingsStore.get('INSTAGRAM_BUSINESS_ACCOUNT_ID')?.trim();
+      if (sb) businessAccountId = sb;
+    }
+
+    // Fall back to environment variables
+    if (!token && env.INSTAGRAM_ACCESS_TOKEN) {
+      token = env.INSTAGRAM_ACCESS_TOKEN.trim();
+    }
+    if (!businessAccountId && env.INSTAGRAM_BUSINESS_ACCOUNT_ID) {
+      businessAccountId = env.INSTAGRAM_BUSINESS_ACCOUNT_ID.trim();
+    }
+
+    if (!token || !businessAccountId) {
+      const missing = [
+        !token && 'Instagram Access Token',
+        !businessAccountId && 'Instagram Business Account ID',
+      ].filter(Boolean).join(' and ');
+
+      const accountLabel = username ? ` for @${username}` : (accountId ? ` for account ${accountId}` : '');
+      throw new NonRetryableError(
+        `Missing ${missing}${accountLabel}. Please configure credentials in Connected Accounts, Settings, or .env.`
+      );
+    }
+
+    const resolved = { token, accountId: businessAccountId, username };
+    if (accountId) {
+      this.credsCache.set(accountId, resolved);
+    }
+    return resolved;
+  }
+
+  async testConnection(accountId?: string): Promise<ConnectionTestResult> {
+    try {
+      const { token, accountId: igId } = await this.getCredentialsForAccount(accountId);
+      const res = await fetch(`${GRAPH_URL}/${igId}?fields=id,name,username,profile_picture_url&access_token=${encodeURIComponent(token)}`);
+      if (!res.ok) {
+        const errJson = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const msg = errJson?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
+        return {
+          success: false,
+          message: `Instagram verification failed: ${msg}`,
+        };
+      }
+      const data = (await res.json()) as { id: string; name?: string; username?: string };
+      const display = data.username ? `@${data.username}` : (data.name || data.id);
+      return {
+        success: true,
+        message: `Successfully connected to Instagram account ${display} (ID: ${data.id})`,
+        details: data,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
+
+  protected async doPost(content: GeneratedContent, accountId: string): Promise<PlatformPostResult> {
+    const { token, accountId: igAccountId } = await this.getCredentialsForAccount(accountId);
     const caption = composePostText(content);
 
     const mediaUrl = content.mediaUrls?.[0];
@@ -61,18 +151,19 @@ export class InstagramAdapter extends BasePlatformAdapter {
       return { success: false, error: 'Instagram requires an image or video' };
     }
 
-    const publicUrl = toAbsoluteUrl(mediaUrl, env.PUBLIC_BASE_URL);
+    const publicBaseUrl = settingsStore.get('PUBLIC_BASE_URL') || env.PUBLIC_BASE_URL;
+    const publicUrl = toAbsoluteUrl(mediaUrl, publicBaseUrl);
     if (!publicUrl) {
       return {
         success: false,
-        error: 'Instagram fetches media by URL — set PUBLIC_BASE_URL so locally generated media is reachable',
+        error: 'Instagram fetches media by URL — set PUBLIC_BASE_URL in Settings so locally generated media is reachable',
       };
     }
 
     const isVideo = /\.(mp4|mov)(\?|$)/i.test(publicUrl);
 
     // Step 1: Create media container
-    const createRes = await fetch(`${GRAPH_URL}/${accountId}/media`, {
+    const createRes = await fetch(`${GRAPH_URL}/${igAccountId}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -98,7 +189,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     }
 
     // Step 2: Publish
-    const publishRes = await fetch(`${GRAPH_URL}/${accountId}/media_publish`, {
+    const publishRes = await fetch(`${GRAPH_URL}/${igAccountId}/media_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -149,8 +240,8 @@ export class InstagramAdapter extends BasePlatformAdapter {
     }
   }
 
-  protected async doDelete(platformPostId: string, _accountId: string): Promise<boolean> {
-    const { token } = this.getCredentials();
+  protected async doDelete(platformPostId: string, accountId: string): Promise<boolean> {
+    const { token } = await this.getCredentialsForAccount(accountId);
 
     const res = await fetch(
       `${GRAPH_URL}/${platformPostId}?access_token=${encodeURIComponent(token)}`,
@@ -160,8 +251,8 @@ export class InstagramAdapter extends BasePlatformAdapter {
     return res.ok;
   }
 
-  protected async doGetAnalytics(platformPostId: string, _accountId: string): Promise<PostAnalyticsData> {
-    const { token } = this.getCredentials();
+  protected async doGetAnalytics(platformPostId: string, accountId: string): Promise<PostAnalyticsData> {
+    const { token } = await this.getCredentialsForAccount(accountId);
 
     const res = await fetch(
       `${GRAPH_URL}/${platformPostId}/insights?metric=impressions,reach,likes,comments,shares&access_token=${encodeURIComponent(token)}`,

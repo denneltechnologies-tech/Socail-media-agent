@@ -2,7 +2,8 @@ import { TwitterApi, type TweetV2PostTweetResult } from 'twitter-api-v2';
 import { eq } from 'drizzle-orm';
 import { Platform } from '../../config/constants.js';
 import { env } from '../../config/env.js';
-import type { GeneratedContent, PlatformPostResult, PostAnalyticsData } from '../../types/index.js';
+import { settingsStore } from '../../config/settings-store.js';
+import type { GeneratedContent, PlatformPostResult, PostAnalyticsData, ConnectionTestResult } from '../../types/index.js';
 import { BasePlatformAdapter } from '../base.js';
 import { logger } from '../../config/logger.js';
 import { db, schema } from '../../db/index.js';
@@ -16,19 +17,24 @@ export class TwitterAdapter extends BasePlatformAdapter {
   private clientCache = new Map<string, TwitterApi>();
 
   async init(): Promise<void> {
-    if (!env.TWITTER_API_KEY || !env.TWITTER_API_SECRET || !env.TWITTER_ACCESS_TOKEN || !env.TWITTER_ACCESS_SECRET) {
-      logger.warn('Twitter env credentials not configured, will use per-account credentials from DB');
+    const apiKey = env.TWITTER_API_KEY || settingsStore.get('TWITTER_API_KEY');
+    const apiSecret = env.TWITTER_API_SECRET || settingsStore.get('TWITTER_API_SECRET');
+    const accessToken = env.TWITTER_ACCESS_TOKEN || settingsStore.get('TWITTER_ACCESS_TOKEN');
+    const accessSecret = env.TWITTER_ACCESS_SECRET || settingsStore.get('TWITTER_ACCESS_SECRET');
+
+    if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
+      logger.info('Twitter adapter initialized (credentials will be resolved per account or from Settings)');
       return;
     }
 
     this.fallbackClient = new TwitterApi({
-      appKey: env.TWITTER_API_KEY,
-      appSecret: env.TWITTER_API_SECRET,
-      accessToken: env.TWITTER_ACCESS_TOKEN,
-      accessSecret: env.TWITTER_ACCESS_SECRET,
+      appKey: apiKey,
+      appSecret: apiSecret,
+      accessToken,
+      accessSecret,
     });
 
-    this.log('Adapter initialized with env fallback client');
+    this.log('Adapter initialized with system client');
   }
 
   async destroy(): Promise<void> {
@@ -37,38 +43,73 @@ export class TwitterAdapter extends BasePlatformAdapter {
     this.log('Adapter destroyed');
   }
 
-  private async getClientForAccount(accountId: string): Promise<TwitterApi> {
-    const cached = this.clientCache.get(accountId);
-    if (cached) return cached;
+  private async getClientForAccount(accountId?: string): Promise<TwitterApi> {
+    if (accountId) {
+      const cached = this.clientCache.get(accountId);
+      if (cached) return cached;
 
-    const [account] = await db
-      .select({ credentials: schema.accounts.credentials })
-      .from(schema.accounts)
-      .where(eq(schema.accounts.id, accountId))
-      .limit(1);
+      const [account] = await db
+        .select({ username: schema.accounts.username, credentials: schema.accounts.credentials })
+        .from(schema.accounts)
+        .where(eq(schema.accounts.id, accountId))
+        .limit(1);
 
-    const creds = account?.credentials as Record<string, string> | undefined;
+      const creds = account?.credentials as Record<string, string> | undefined;
 
-    if (creds?.apiKey && creds?.apiSecret && creds?.accessToken && creds?.accessSecret) {
-      const client = new TwitterApi({
-        appKey: creds.apiKey,
-        appSecret: creds.apiSecret,
-        accessToken: creds.accessToken,
-        accessSecret: creds.accessSecret,
-      });
-      this.clientCache.set(accountId, client);
-      this.log('Created client from DB credentials', { accountId });
-      return client;
+      if (creds?.apiKey && creds?.apiSecret && creds?.accessToken && creds?.accessSecret) {
+        const client = new TwitterApi({
+          appKey: creds.apiKey,
+          appSecret: creds.apiSecret,
+          accessToken: creds.accessToken,
+          accessSecret: creds.accessSecret,
+        });
+        this.clientCache.set(accountId, client);
+        this.log('Created client from DB credentials', { accountId });
+        return client;
+      }
     }
 
     if (this.fallbackClient) {
-      this.log('Using fallback env client', { accountId });
       return this.fallbackClient;
     }
 
+    // Try settingsStore fallback
+    const apiKey = settingsStore.get('TWITTER_API_KEY') || env.TWITTER_API_KEY;
+    const apiSecret = settingsStore.get('TWITTER_API_SECRET') || env.TWITTER_API_SECRET;
+    const accessToken = settingsStore.get('TWITTER_ACCESS_TOKEN') || env.TWITTER_ACCESS_TOKEN;
+    const accessSecret = settingsStore.get('TWITTER_ACCESS_SECRET') || env.TWITTER_ACCESS_SECRET;
+
+    if (apiKey && apiSecret && accessToken && accessSecret) {
+      const client = new TwitterApi({
+        appKey: apiKey,
+        appSecret: apiSecret,
+        accessToken,
+        accessSecret,
+      });
+      if (accountId) this.clientCache.set(accountId, client);
+      return client;
+    }
+
     throw new NonRetryableError(
-      `No Twitter credentials for account ${accountId} — add them in the dashboard or set TWITTER_* in .env`,
+      `No Twitter credentials found${accountId ? ` for account ${accountId}` : ''} — please configure them in Connected Accounts, Settings, or .env`,
     );
+  }
+
+  async testConnection(accountId?: string): Promise<ConnectionTestResult> {
+    try {
+      const client = await this.getClientForAccount(accountId);
+      const me = await client.v2.me();
+      return {
+        success: true,
+        message: `Successfully connected to Twitter/X @${me.data.username} (${me.data.name})`,
+        details: me.data as unknown as Record<string, unknown>,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      };
+    }
   }
 
   protected async doPost(content: GeneratedContent, accountId: string): Promise<PlatformPostResult> {

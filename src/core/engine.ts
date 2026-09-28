@@ -378,7 +378,21 @@ export class Engine {
       return;
     }
 
-    const contentTypes = strategy.contentTypes?.length ? strategy.contentTypes : [ContentType.TEXT];
+    const defaultContentTypesForPlatform = (plat: Platform): ContentType[] => {
+      switch (plat) {
+        case Platform.INSTAGRAM:
+          return [ContentType.IMAGE, ContentType.REEL];
+        case Platform.YOUTUBE:
+          return [ContentType.VIDEO, ContentType.SHORT];
+        case Platform.TIKTOK:
+          return [ContentType.VIDEO];
+        case Platform.TWITTER:
+        default:
+          return [ContentType.TEXT, ContentType.IMAGE];
+      }
+    };
+
+    const contentTypes = strategy.contentTypes?.length ? strategy.contentTypes : defaultContentTypesForPlatform(platform);
     const contentType = contentTypes[Math.floor(Math.random() * contentTypes.length)]!;
 
     const [project] = await db

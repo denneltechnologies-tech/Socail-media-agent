@@ -12,20 +12,11 @@ import { CatpetPlugin } from './plugins/catpet/index.js';
 import { initWhatsApp, destroyWhatsApp } from './notifications/whatsapp.js';
 
 function registerAdapters(): void {
-  // Twitter is always registered: accounts can carry their own credentials in the database
+  // All adapters support per-account database credentials, dashboard Settings store, and env fallbacks
   engine.registerAdapter(new TwitterAdapter());
-
-  if (env.INSTAGRAM_ACCESS_TOKEN) {
-    engine.registerAdapter(new InstagramAdapter());
-  }
-
-  if (env.YOUTUBE_CLIENT_ID) {
-    engine.registerAdapter(new YouTubeAdapter());
-  }
-
-  if (env.TIKTOK_ACCESS_TOKEN) {
-    engine.registerAdapter(new TikTokAdapter());
-  }
+  engine.registerAdapter(new InstagramAdapter());
+  engine.registerAdapter(new YouTubeAdapter());
+  engine.registerAdapter(new TikTokAdapter());
 }
 
 function registerPlugins(): void {
