@@ -1849,7 +1849,11 @@
             <td>${esc(a.role || 'creator')}</td>
             <td>${esc(projectsMap[a.projectId] || '-')}</td>
             <td>${credBadge}</td>
-            <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual')}</td>
+            <td style="white-space:nowrap">
+              <span class="badge" style="background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);font-size:0.72rem" title="Cron expression: ${esc(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual')}">
+                ⏰ ${esc(describeCron(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual'))}
+              </span>
+            </td>
             <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
             <td style="white-space:nowrap">
               ${(a.platform === 'instagram' || a.platform === 'twitter') ? `<button class="btn btn-secondary btn-sm" onclick="startSocialOAuth('${a.platform}', '${a.id}', '${a.projectId}')" style="border-color:${a.platform === 'instagram' ? 'rgba(224,64,251,0.5)' : 'rgba(56,189,248,0.5)'};color:${a.platform === 'instagram' ? '#e040fb' : '#38bdf8'}" title="1-Click OAuth Sign In for this account">🔗 Connect</button>` : ''}
@@ -1958,14 +1962,40 @@
           <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Defines the topics and creative direction for automated posts</div>
         </div>
         <div class="form-group">
-          <label>Schedule Cron Expression</label>
-          <input id="af-schedule" placeholder="0 */4 * * * (Every 4 hours)" value="${esc(currSchedule)}">
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            <span>Automated Posting Schedule</span>
+            <span id="af-schedule-human" style="font-size:0.75rem;color:var(--accent);font-weight:600">Every 4 Hours</span>
+          </label>
+          <select id="af-schedule-preset" onchange="onSchedulePresetChange()" style="margin-bottom:6px">
+            <option value="0 */4 * * *">🌟 Every 4 Hours (Recommended — 6 posts/day)</option>
+            <option value="0 */2 * * *">🚀 Every 2 Hours (Active — 12 posts/day)</option>
+            <option value="0 */3 * * *">⚡ Every 3 Hours (8 posts/day)</option>
+            <option value="0 */6 * * *">⏰ Every 6 Hours (Balanced — 4 posts/day)</option>
+            <option value="0 */8 * * *">⏱️ Every 8 Hours (Moderate — 3 posts/day)</option>
+            <option value="0 */12 * * *">📅 Twice a Day (Every 12 Hours)</option>
+            <option value="0 9,18 * * *">🌅 Twice a Day (Morning 9:00 AM & Evening 6:00 PM)</option>
+            <option value="0 9 * * *">☀️ Once a Day (Morning at 9:00 AM)</option>
+            <option value="0 19 * * *">🌙 Once a Day (Evening at 7:00 PM)</option>
+            <option value="0 * * * *">⚡ Every Hour (24 posts/day)</option>
+            <option value="manual">⏸️ Manual Only (Disable Auto-Posting)</option>
+            <option value="custom">⚙️ Custom Cron Expression (Advanced)</option>
+          </select>
+          <div id="af-schedule-custom-wrap" style="display:none;margin-top:6px">
+            <input id="af-schedule" placeholder="e.g. 0 */4 * * *" value="${esc(currSchedule)}" oninput="updateScheduleHint(this.value)">
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">
+              Standard 5-part cron syntax: <code>minute hour day month day-of-week</code>
+            </div>
+          </div>
+          <div id="af-schedule-hint" style="font-size:0.75rem;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-top:6px">
+            Automated posts will be generated and published once every 4 hours.
+          </div>
         </div>`;
       const footer = `
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveAccount('${isEdit ? id : ''}')">Save</button>`;
       openModal(isEdit ? 'Edit Account' : 'Link Social Account', body, footer);
       onAccountPlatformChange();
+      initSchedulePreset(currSchedule);
     }
 
     function onAccountPlatformChange() {
@@ -1996,6 +2026,92 @@
           btn.innerHTML = '🐦 Sign In with Twitter / X';
         } else {
           box.style.display = 'none';
+        }
+      }
+    }
+
+    function describeCron(expr) {
+      if (!expr || expr === 'manual' || expr === 'Manual') return 'Manual Only (Paused)';
+      const trimmed = expr.trim();
+      const presets = {
+        '0 */4 * * *': 'Every 4 Hours (6 posts/day)',
+        '0 */2 * * *': 'Every 2 Hours (12 posts/day)',
+        '0 */3 * * *': 'Every 3 Hours (8 posts/day)',
+        '0 */6 * * *': 'Every 6 Hours (4 posts/day)',
+        '0 */8 * * *': 'Every 8 Hours (3 posts/day)',
+        '0 */12 * * *': 'Twice a Day (Every 12h)',
+        '0 9,18 * * *': 'Twice a Day (9am & 6pm)',
+        '0 9 * * *': 'Daily at 9:00 AM',
+        '0 12 * * *': 'Daily at 12:00 PM',
+        '0 18 * * *': 'Daily at 6:00 PM',
+        '0 19 * * *': 'Daily at 7:00 PM',
+        '0 * * * *': 'Every Hour (24 posts/day)',
+        '*/30 * * * *': 'Every 30 Minutes',
+      };
+      if (presets[trimmed]) return presets[trimmed];
+
+      const parts = trimmed.split(/\s+/);
+      if (parts.length === 5) {
+        const [min, hour] = parts;
+        if (min === '0' && hour.startsWith('*/')) {
+          return `Every ${hour.replace('*/', '')} Hours`;
+        }
+        if (parts[2] === '*' && parts[3] === '*' && parts[4] === '*') {
+          if (!hour.includes('*') && !hour.includes('/')) {
+            const h = parseInt(hour, 10);
+            if (!isNaN(h)) {
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              const displayH = h % 12 || 12;
+              return `Daily at ${displayH}:${min.padStart(2, '0')} ${ampm}`;
+            }
+          }
+        }
+      }
+      return trimmed;
+    }
+
+    function initSchedulePreset(cron) {
+      const sel = document.getElementById('af-schedule-preset');
+      const customWrap = document.getElementById('af-schedule-custom-wrap');
+      const input = document.getElementById('af-schedule');
+      if (!sel || !input) return;
+
+      const hasOption = Array.from(sel.options).some(opt => opt.value === cron);
+      if (hasOption) {
+        sel.value = cron;
+        if (customWrap) customWrap.style.display = 'none';
+      } else {
+        sel.value = 'custom';
+        if (customWrap) customWrap.style.display = 'block';
+      }
+      updateScheduleHint(cron);
+    }
+
+    function onSchedulePresetChange() {
+      const sel = document.getElementById('af-schedule-preset');
+      const customWrap = document.getElementById('af-schedule-custom-wrap');
+      const input = document.getElementById('af-schedule');
+      if (!sel || !input) return;
+
+      if (sel.value === 'custom') {
+        if (customWrap) customWrap.style.display = 'block';
+      } else {
+        if (customWrap) customWrap.style.display = 'none';
+        input.value = sel.value;
+      }
+      updateScheduleHint(input.value);
+    }
+
+    function updateScheduleHint(cron) {
+      const hint = document.getElementById('af-schedule-hint');
+      const human = document.getElementById('af-schedule-human');
+      const desc = describeCron(cron);
+      if (human) human.textContent = desc;
+      if (hint) {
+        if (!cron || cron === 'manual') {
+          hint.innerHTML = `<strong>Schedule:</strong> Auto-posting is paused. Posts must be published manually.`;
+        } else {
+          hint.innerHTML = `<strong>Schedule:</strong> Posts automatically <em>${esc(desc)}</em>.<br><span style="color:var(--text-muted);font-size:0.72rem">System cron syntax: <code>${esc(cron)}</code></span>`;
         }
       }
     }
