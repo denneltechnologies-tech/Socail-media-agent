@@ -13,6 +13,7 @@ import { accountsRouter } from './routes/accounts.js';
 import { postsRouter } from './routes/posts.js';
 import { projectsRouter } from './routes/projects.js';
 import { twitterAuthRouter } from './routes/twitter-auth.js';
+import { instagramAuthRouter } from './routes/instagram-auth.js';
 import { authRouter } from './routes/auth.js';
 import { settingsRouter } from './routes/settings.js';
 import { historyRouter } from './routes/history.js';
@@ -50,6 +51,7 @@ export function createServer(): express.Express {
       '/api/auth/login',
       '/api/auth/me',
       '/api/twitter/callback',
+      '/api/instagram/callback',
     ],
   }));
 
@@ -64,6 +66,7 @@ export function createServer(): express.Express {
   app.use('/api/accounts', accountsRouter);
   app.use('/api/posts', postsRouter);
   app.use('/api/twitter', twitterAuthRouter);
+  app.use('/api/instagram', instagramAuthRouter);
 
   app.get('/', (_req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

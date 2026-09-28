@@ -27,10 +27,14 @@ export const envSchema = z.object({
 
   INSTAGRAM_ACCESS_TOKEN: optionalString(),
   INSTAGRAM_BUSINESS_ACCOUNT_ID: optionalString(),
+  FACEBOOK_APP_ID: optionalString(),
+  FACEBOOK_APP_SECRET: optionalString(),
+  INSTAGRAM_CALLBACK_URL: optionalString(),
 
   YOUTUBE_CLIENT_ID: optionalString(),
   YOUTUBE_CLIENT_SECRET: optionalString(),
   YOUTUBE_REFRESH_TOKEN: optionalString(),
+  YOUTUBE_CALLBACK_URL: optionalString(),
 
   TIKTOK_ACCESS_TOKEN: optionalString(),
 

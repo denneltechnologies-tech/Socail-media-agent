@@ -638,7 +638,15 @@
             <h2>Connected Social Accounts</h2>
             <p>Manage API credentials, OAuth tokens, and auto-publishing schedules</p>
           </div>
-          <button class="btn btn-primary" onclick="openAccountModal()">+ Link Account</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="openAccountModal()">+ Link Account</button>
+            <button class="btn btn-secondary" onclick="startSocialOAuth('instagram')" style="border-color:rgba(224,64,251,0.4);color:#e040fb" title="1-Click Sign In to Instagram via Meta OAuth">
+              📸 Sign In with Instagram
+            </button>
+            <button class="btn btn-secondary" onclick="startSocialOAuth('twitter')" style="border-color:rgba(56,189,248,0.4);color:#38bdf8" title="1-Click Sign In to Twitter via OAuth">
+              🐦 Sign In with Twitter / X
+            </button>
+          </div>
         </div>
         <div class="toolbar">
           <select id="accounts-project-filter" onchange="loadAccounts()">
@@ -881,9 +889,31 @@
               </div>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <h4 style="font-size:0.85rem;color:var(--text);margin:0">Instagram Graph API</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h4 style="font-size:0.85rem;color:var(--text);margin:0">Instagram & Meta Graph API (1-Click OAuth)</h4>
               <button type="button" class="btn btn-secondary btn-sm" onclick="testPlatformSettings('instagram', this)">⚡ Test Connection</button>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:8px">
+              Configure your Meta App ID & Secret once below to enable 1-click Instagram sign-in for any account.
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+              <div class="settings-input-wrap">
+                <input type="text" id="cfg-FACEBOOK_APP_ID" placeholder="Meta App ID (from developers.facebook.com)">
+              </div>
+              <div class="settings-input-wrap">
+                <input type="password" id="cfg-FACEBOOK_APP_SECRET" placeholder="Meta App Secret">
+                <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-FACEBOOK_APP_SECRET', this)">👁</button>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:0.75rem;display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                <span style="color:var(--text-muted)">Meta OAuth Redirect URI:</span>
+                <code id="meta-redirect-uri" style="color:var(--accent);margin-left:6px;user-select:all"></code>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="copyMetaRedirectUri(this)" style="font-size:0.7rem;padding:3px 10px;flex-shrink:0">Copy</button>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:6px">
+              Or manually configure default access token / business account ID:
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
               <div class="settings-input-wrap">
@@ -1822,6 +1852,7 @@
             <td style="font-family:monospace;font-size:0.75rem">${esc(a.strategy?.cronExpression || a.strategy?.postingSchedule || 'Manual')}</td>
             <td><span class="badge ${a.active ? 'badge-active' : 'badge-inactive'}">${a.active ? 'Active' : 'Paused'}</span></td>
             <td style="white-space:nowrap">
+              ${(a.platform === 'instagram' || a.platform === 'twitter') ? `<button class="btn btn-secondary btn-sm" onclick="startSocialOAuth('${a.platform}', '${a.id}', '${a.projectId}')" style="border-color:${a.platform === 'instagram' ? 'rgba(224,64,251,0.5)' : 'rgba(56,189,248,0.5)'};color:${a.platform === 'instagram' ? '#e040fb' : '#38bdf8'}" title="1-Click OAuth Sign In for this account">🔗 Connect</button>` : ''}
               <button class="btn btn-secondary btn-sm" onclick="testAccountConnection('${a.id}', this)" title="Test API connection for this account">⚡ Test</button>
               <button class="btn btn-secondary btn-sm" onclick="openAccountModal('${a.id}')">Edit</button>
               <button class="btn btn-danger btn-sm" onclick="deleteAccount('${a.id}')">Delete</button>
@@ -1857,18 +1888,32 @@
             <option value="tiktok" ${currPlatform === 'tiktok' ? 'selected' : ''}>TikTok</option>
           </select>
         </div>
+        <div id="af-oauth-box" style="margin-bottom:14px;padding:12px 14px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:0.85rem;color:var(--text);display:flex;align-items:center;gap:6px">
+              <span>⚡ Fast 1-Click Authentication (Recommended)</span>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px">
+              Sign in via secure popup — username, tokens, and IDs are detected and connected automatically.
+            </div>
+          </div>
+          <button type="button" id="af-btn-oauth" class="btn btn-primary" onclick="triggerOAuthFromModal('${isEdit ? id : ''}')">
+            🔗 Sign In
+          </button>
+        </div>
+
         <div class="form-group">
           <label>Account Handle / Username</label>
           <input id="af-username" placeholder="e.g. brand_official or https://instagram.com/brand_official" value="${esc(currUsername)}">
           <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px">Paste your handle (@username) or full profile URL</div>
         </div>
 
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <label style="margin:0;font-size:0.8rem;font-weight:600">Account Credentials (Optional Override)</label>
-            ${isEdit ? `<button type="button" class="btn btn-secondary btn-sm" onclick="testAccountConnection('${id}', this)">⚡ Test Connection</button>` : ''}
-          </div>
-          <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:10px">
+        <details style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
+          <summary style="cursor:pointer;font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;align-items:center">
+            <span>Manual Credentials & API Overrides (Optional)</span>
+            ${isEdit ? `<button type="button" class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); testAccountConnection('${id}', this)">⚡ Test</button>` : ''}
+          </summary>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin:8px 0 10px">
             Leave blank to automatically use system credentials from the <strong>Settings</strong> tab, or enter account-specific keys below.
           </div>
 
@@ -1905,7 +1950,7 @@
           <div id="af-creds-tiktok" style="display:none">
             <input type="password" id="af-tt-token" placeholder="TikTok Access Token">
           </div>
-        </div>
+        </details>
 
         <div class="form-group">
           <label>Content Theme & Prompt Strategy</label>
@@ -1929,6 +1974,30 @@
         const el = document.getElementById(`af-creds-${p}`);
         if (el) el.style.display = p === plat ? 'block' : 'none';
       });
+
+      const box = document.getElementById('af-oauth-box');
+      const btn = document.getElementById('af-btn-oauth');
+      if (box && btn) {
+        if (plat === 'instagram') {
+          box.style.display = 'flex';
+          box.style.border = '1px solid rgba(225,48,108,0.35)';
+          box.style.background = 'linear-gradient(135deg, rgba(225,48,108,0.12) 0%, rgba(131,58,180,0.12) 100%)';
+          btn.style.background = 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)';
+          btn.style.border = 'none';
+          btn.style.color = '#fff';
+          btn.innerHTML = '📸 Sign In with Instagram / Meta';
+        } else if (plat === 'twitter') {
+          box.style.display = 'flex';
+          box.style.border = '1px solid rgba(56,189,248,0.35)';
+          box.style.background = 'rgba(56,189,248,0.08)';
+          btn.style.background = '#1d9bf0';
+          btn.style.border = 'none';
+          btn.style.color = '#fff';
+          btn.innerHTML = '🐦 Sign In with Twitter / X';
+        } else {
+          box.style.display = 'none';
+        }
+      }
     }
 
     async function saveAccount(id) {
@@ -2060,6 +2129,75 @@
         toast('Account deleted');
         loadAccounts();
       } catch (err) { toast(err.message, 'error'); }
+    }
+
+    // ── 1-Click Social OAuth Flow ──
+    function startSocialOAuth(platform, accountId, projectId) {
+      if (!projectId && !accountId) {
+        const filterVal = document.getElementById('accounts-project-filter')?.value;
+        if (filterVal) {
+          projectId = filterVal;
+        } else if (projects.length > 0) {
+          projectId = projects[0].id;
+        }
+      }
+
+      const w = 620, h = 720;
+      const left = Math.max(0, (window.innerWidth - w) / 2 + window.screenX);
+      const top = Math.max(0, (window.innerHeight - h) / 2 + window.screenY);
+      const qs = new URLSearchParams();
+      if (accountId) qs.set('accountId', accountId);
+      if (projectId) qs.set('projectId', projectId);
+
+      let url = '';
+      if (platform === 'instagram') {
+        url = `/api/instagram/auth?${qs.toString()}`;
+      } else if (platform === 'twitter') {
+        url = `/api/twitter/auth?${qs.toString()}`;
+      } else {
+        toast(`1-click sign-in is not yet supported for ${platform}. Please enter credentials manually.`, 'warning');
+        return;
+      }
+
+      const popup = window.open(url, `${platform}_oauth`, `width=${w},height=${h},top=${top},left=${left},scrollbars=yes,status=1`);
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        toast('Popup was blocked by your browser. Please allow popups for this site and try again.', 'error');
+      }
+    }
+
+    function triggerOAuthFromModal(id) {
+      const plat = document.getElementById('af-platform')?.value;
+      const proj = document.getElementById('af-project')?.value;
+      startSocialOAuth(plat, id || undefined, proj || undefined);
+    }
+
+    // Handle OAuth popup completion messages
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (!data || (data.type !== 'social-oauth' && data.type !== 'twitter-oauth')) return;
+
+      if (data.success) {
+        const user = data.username || data.screenName || 'account';
+        const platformName = data.platform === 'instagram' ? 'Instagram' : data.platform === 'twitter' ? 'Twitter / X' : 'Social';
+        toast(`🎉 Successfully connected and authenticated ${platformName} @${user}! Credentials and tokens saved.`, 'success');
+        closeModal();
+        loadAccounts();
+        if (typeof loadDashboard === 'function') loadDashboard();
+      } else {
+        toast(`Authentication failed: ${data.error || 'Unknown error'}`, 'error');
+      }
+    });
+
+    function copyMetaRedirectUri(btn) {
+      const uri = `${window.location.origin}/api/instagram/callback`;
+      navigator.clipboard.writeText(uri).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      }).catch(() => {
+        prompt('Copy this Redirect URI into your Facebook App settings:', uri);
+      });
     }
 
     // ── Posts & Drafts ──
@@ -2677,6 +2815,11 @@
           pexelsBadge.textContent = data.PEXELS_API_KEY?.isSet ? 'Configured' : 'Optional';
         }
 
+        const metaUriEl = document.getElementById('meta-redirect-uri');
+        if (metaUriEl) {
+          metaUriEl.textContent = `${window.location.origin}/api/instagram/callback`;
+        }
+
         checkAiStatus();
       } catch (err) { toast(err.message, 'error'); }
     }
@@ -2691,6 +2834,8 @@
         'TWITTER_API_SECRET',
         'TWITTER_ACCESS_TOKEN',
         'TWITTER_ACCESS_SECRET',
+        'FACEBOOK_APP_ID',
+        'FACEBOOK_APP_SECRET',
         'INSTAGRAM_ACCESS_TOKEN',
         'INSTAGRAM_BUSINESS_ACCOUNT_ID',
         'YOUTUBE_CLIENT_ID',
