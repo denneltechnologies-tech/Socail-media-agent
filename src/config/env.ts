@@ -42,6 +42,11 @@ export const envSchema = z.object({
 
   WHATSAPP_ADMIN_NUMBER: optionalString(),
 
+  /** Telegram interactive post approval & notifications */
+  TELEGRAM_BOT_TOKEN: optionalString(),
+  TELEGRAM_CHAT_ID: optionalString(),
+  REQUIRE_APPROVAL: booleanFlag(false),
+
   PLUGIN_DATABASE_URL: optionalUrl(),
 
   /** Protects the dashboard and REST API with HTTP Basic Auth when set */

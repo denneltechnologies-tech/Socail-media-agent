@@ -12,6 +12,12 @@ import { pickContentAction, mergeHashtags } from './content-mix.js';
 import { NonRetryableError, errorMessage, isRetryable } from './errors.js';
 import { db, schema } from '../db/index.js';
 import { notifyPostPublished, notifyPostFailed, notifyContentGenerated, notifyDailySummary } from '../notifications/whatsapp.js';
+import {
+  requestTelegramApproval,
+  notifyTelegramPostPublished,
+  notifyTelegramPostFailed,
+  getTelegramConfig,
+} from '../notifications/telegram.js';
 import { trackAllPublishedPosts, trackPostAnalytics } from '../analytics/tracker.js';
 import { generateReport } from '../analytics/reporter.js';
 import { optimizeStrategies } from './strategy-optimizer.js';
@@ -305,9 +311,11 @@ export class Engine {
     };
   }
 
-  /** Stores generated content and queues it for publishing — or holds it for review if it fails the quality gate */
+  /** Stores generated content and queues it for publishing — or holds it for review if required or failing quality gate */
   private async saveAndQueue(post: NewPost): Promise<string> {
-    const holdForReview = failsQualityGate(post.content);
+    const { requireApproval } = getTelegramConfig();
+    const failsQuality = failsQualityGate(post.content);
+    const holdForReview = requireApproval || failsQuality;
 
     const [created] = await db
       .insert(schema.posts)
@@ -337,6 +345,7 @@ export class Engine {
       accountId: post.accountId,
       contentType: post.contentType,
       heldForReview: holdForReview,
+      requireApproval,
     });
 
     await notifyContentGenerated({
@@ -347,7 +356,22 @@ export class Engine {
     });
 
     if (holdForReview) {
-      logger.warn(`Post ${postId} scored ${post.content.qualityScore} and was held for manual review`);
+      if (requireApproval) {
+        logger.info(`Post ${postId} held for manual approval (REQUIRE_APPROVAL is enabled)`);
+      } else {
+        logger.warn(`Post ${postId} scored ${post.content.qualityScore} and was held for manual review`);
+      }
+
+      await requestTelegramApproval({
+        postId,
+        username,
+        platform: post.platform,
+        contentType: post.contentType,
+        text: post.content.text,
+        hashtags: post.content.hashtags,
+        mediaUrls: post.content.mediaUrls,
+      });
+
       return postId;
     }
 
@@ -659,6 +683,7 @@ export class Engine {
       }
       if (final) {
         await notifyPostFailed({ username, platform, text: content.text, error: message });
+        await notifyTelegramPostFailed({ username, platform, text: content.text, error: message });
       }
     };
 
@@ -719,6 +744,13 @@ export class Engine {
       hashtags: content.hashtags,
       platformUrl: result.url,
       platformPostId: result.platformPostId,
+    });
+    await notifyTelegramPostPublished({
+      username,
+      platform,
+      text: content.text,
+      hashtags: content.hashtags,
+      platformUrl: result.url,
     });
   }
 

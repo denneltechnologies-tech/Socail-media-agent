@@ -10,6 +10,7 @@ import { YouTubeAdapter } from './platforms/youtube/index.js';
 import { TikTokAdapter } from './platforms/tiktok/index.js';
 import { CatpetPlugin } from './plugins/catpet/index.js';
 import { initWhatsApp, destroyWhatsApp } from './notifications/whatsapp.js';
+import { initTelegram, destroyTelegram } from './notifications/telegram.js';
 
 function registerAdapters(): void {
   // All adapters support per-account database credentials, dashboard Settings store, and env fallbacks
@@ -58,6 +59,7 @@ async function main(): Promise<void> {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await engine.stop().catch((err) => logger.error('Engine stop failed', { error: String(err) }));
     await destroyWhatsApp().catch(() => {});
+    await destroyTelegram().catch(() => {});
     await closeDb().catch(() => {});
     process.exit(0);
   };
@@ -71,6 +73,13 @@ async function main(): Promise<void> {
   // Initialize WhatsApp (non-blocking — bot works without it)
   initWhatsApp().catch((err) => {
     logger.warn('WhatsApp initialization failed, notifications disabled', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+
+  // Initialize Telegram Approval Bot (non-blocking — works without it)
+  initTelegram().catch((err) => {
+    logger.warn('Telegram initialization failed, notifications disabled', {
       error: err instanceof Error ? err.message : String(err),
     });
   });

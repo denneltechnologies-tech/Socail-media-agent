@@ -6,6 +6,7 @@ import { logger } from '../../config/logger.js';
 import { engine } from '../../core/engine.js';
 import { Platform } from '../../config/constants.js';
 import { asyncHandler } from '../middleware.js';
+import { initTelegram, sendTelegramAdminMessage } from '../../notifications/telegram.js';
 
 export const settingsRouter = Router();
 
@@ -20,6 +21,7 @@ const SENSITIVE_KEYS = new Set([
   'YOUTUBE_CLIENT_SECRET',
   'YOUTUBE_REFRESH_TOKEN',
   'TIKTOK_ACCESS_TOKEN',
+  'TELEGRAM_BOT_TOKEN',
   'DASHBOARD_PASSWORD',
 ]);
 
@@ -200,6 +202,42 @@ settingsRouter.post('/test-platform/:platform', asyncHandler(async (req, res) =>
     res.json(result);
   } else {
     res.json({ success: true, message: `Adapter for ${platform} is registered and ready` });
+  }
+}));
+
+settingsRouter.post('/test-telegram', asyncHandler(async (req, res) => {
+  const customToken = typeof req.body?.botToken === 'string' ? req.body.botToken.trim() : '';
+  const customChatId = typeof req.body?.chatId === 'string' ? req.body.chatId.trim() : '';
+
+  const token = customToken || settingsStore.get('TELEGRAM_BOT_TOKEN') || env.TELEGRAM_BOT_TOKEN;
+  const chatId = customChatId || settingsStore.get('TELEGRAM_CHAT_ID') || env.TELEGRAM_CHAT_ID;
+
+  if (!token) {
+    res.status(400).json({ success: false, error: 'Telegram Bot Token is required' });
+    return;
+  }
+  if (!chatId) {
+    res.status(400).json({ success: false, error: 'Telegram Chat ID is required' });
+    return;
+  }
+
+  // If user passed new credentials, save and re-init bot
+  if (customToken) await settingsStore.set('TELEGRAM_BOT_TOKEN', customToken);
+  if (customChatId) await settingsStore.set('TELEGRAM_CHAT_ID', customChatId);
+  await initTelegram();
+
+  const success = await sendTelegramAdminMessage(
+    `✅ <b>Telegram Connection Successful!</b>\n\n` +
+    `Your Social Agent AI bot is now linked and ready to send you interactive post approval requests!`,
+  );
+
+  if (success) {
+    res.json({ success: true, message: 'Test message sent to your Telegram chat successfully!' });
+  } else {
+    res.status(400).json({
+      success: false,
+      error: 'Failed to send test message. Check your Bot Token and Chat ID (make sure you started the bot in Telegram first).',
+    });
   }
 }));
 

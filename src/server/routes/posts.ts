@@ -8,6 +8,7 @@ import { publicUrlToPath } from '../../core/media.js';
 import { JobType } from '../../config/constants.js';
 import { logger } from '../../config/logger.js';
 import type { ContentRequest } from '../../types/index.js';
+import { requestTelegramApproval } from '../../notifications/telegram.js';
 import { asyncHandler, isUuid, parseBody, requireUuidParam } from '../middleware.js';
 import { generatePostSchema, platformSchema, postStatusSchema, updatePostSchema } from '../schemas.js';
 
@@ -138,6 +139,24 @@ postsRouter.post('/generate', asyncHandler(async (req, res) => {
       },
     })
     .returning();
+
+  const [acc] = await db
+    .select({ username: schema.accounts.username })
+    .from(schema.accounts)
+    .where(eq(schema.accounts.id, account.id))
+    .limit(1);
+
+  requestTelegramApproval({
+    postId: post!.id,
+    username: acc?.username ?? 'admin',
+    platform: body.platform,
+    contentType: body.contentType,
+    text: content.text,
+    hashtags: content.hashtags,
+    mediaUrls: content.mediaUrls,
+  }).catch((err) => {
+    logger.warn('Failed to dispatch Telegram approval request for generated post', { error: String(err) });
+  });
 
   res.status(201).json({
     post,

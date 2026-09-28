@@ -994,6 +994,44 @@
             </div>
           </div>
 
+          <!-- Telegram Approval & Bot -->
+          <div class="settings-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <h3 style="margin:0">✈️ Telegram Post Approval & Notifications</h3>
+              <span id="badge-telegram" class="badge badge-missing">Not Configured</span>
+            </div>
+            <p class="sub">Receive interactive previews of generated posts on Telegram to approve, edit, or reject before publishing.</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label>Telegram Bot Token (from @BotFather)</label>
+                <div class="settings-input-wrap">
+                  <input type="password" id="cfg-TELEGRAM_BOT_TOKEN" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ...">
+                  <button type="button" class="eye-btn" onclick="togglePassVisibility('cfg-TELEGRAM_BOT_TOKEN', this)">👁</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Telegram Chat ID (Your User or Group ID)</label>
+                <input type="text" id="cfg-TELEGRAM_CHAT_ID" placeholder="e.g. 123456789 (send /start to bot to find)">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px">
+              <div class="form-group">
+                <label>Post Approval Workflow</label>
+                <select id="cfg-REQUIRE_APPROVAL">
+                  <option value="false">Automatic (Only posts held for review or failing quality score)</option>
+                  <option value="true">Strict (Hold EVERY post for Telegram admin approval)</option>
+                </select>
+              </div>
+              <div class="form-group" style="display:flex;align-items:flex-end">
+                <button type="button" id="btn-test-telegram" class="btn btn-secondary" style="width:100%" onclick="testTelegramConnection()">
+                  ✈️ Test Telegram Connection
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Admin Security -->
           <div class="settings-card">
             <h3>🔒 Admin Security</h3>
@@ -3123,6 +3161,13 @@
           pexelsBadge.textContent = data.PEXELS_API_KEY?.isSet ? 'Configured' : 'Optional';
         }
 
+        const tgBadge = document.getElementById('badge-telegram');
+        if (tgBadge) {
+          const isConfigured = Boolean(data.TELEGRAM_BOT_TOKEN?.isSet && data.TELEGRAM_CHAT_ID?.isSet);
+          tgBadge.className = isConfigured ? 'badge badge-configured' : 'badge badge-missing';
+          tgBadge.textContent = isConfigured ? 'Configured & Active' : 'Not Configured';
+        }
+
         const metaUriEl = document.getElementById('meta-redirect-uri');
         if (metaUriEl) {
           metaUriEl.textContent = `${window.location.origin}/api/instagram/callback`;
@@ -3151,6 +3196,9 @@
         'YOUTUBE_REFRESH_TOKEN',
         'TIKTOK_ACCESS_TOKEN',
         'WHATSAPP_ADMIN_NUMBER',
+        'TELEGRAM_BOT_TOKEN',
+        'TELEGRAM_CHAT_ID',
+        'REQUIRE_APPROVAL',
         'PUBLIC_BASE_URL',
         'QUALITY_CHECK_ENABLED',
         'QUALITY_MIN_SCORE',
@@ -3176,6 +3224,29 @@
         loadSettings();
         checkAiStatus();
       } catch (err) { toast(err.message, 'error'); }
+    }
+
+    async function testTelegramConnection() {
+      const btn = document.getElementById('btn-test-telegram');
+      const tokenInput = document.getElementById('cfg-TELEGRAM_BOT_TOKEN');
+      const chatIdInput = document.getElementById('cfg-TELEGRAM_CHAT_ID');
+      const token = tokenInput ? tokenInput.value.trim() : '';
+      const chatId = chatIdInput ? chatIdInput.value.trim() : '';
+
+      if (btn) btn.disabled = true;
+      try {
+        const payload = {};
+        if (token && !token.includes('...')) payload.botToken = token;
+        if (chatId) payload.chatId = chatId;
+
+        const res = await api('/api/settings/test-telegram', { method: 'POST', body: payload });
+        toast(res.message || 'Telegram test message sent successfully!');
+        loadSettings();
+      } catch (err) {
+        toast(err.message || 'Failed to connect to Telegram', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     // ── AI Engine Management ──
