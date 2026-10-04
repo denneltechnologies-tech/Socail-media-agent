@@ -47,7 +47,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@google/genai": "^1.0.0",
+    "@google/genai": "^2.25.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.0",
